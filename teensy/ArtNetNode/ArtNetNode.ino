@@ -18,6 +18,7 @@
 //                             006>255    0–100%
 // Note: Fog output is variable, depending on the status of the heater and environment
 
+#include <Metro.h>
 
 #include <Artnet.h>
 #include <Ethernet.h>
@@ -28,6 +29,14 @@
 #include <DmxSimple.h>
 
 #include <IRremote.h>
+
+//_____________________________
+// Timer settings (better with interrupts?)
+// Create variables to hold states
+int state0 = HIGH;
+int state1 = HIGH;
+Metro metro0 = Metro(500); 
+Metro metro1 = Metro(125); 
 
 //_____________________________
 // OctoWS2811 settings
