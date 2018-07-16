@@ -1,3 +1,7 @@
+//To do:
+//-why is goint ot 187 and 165 at around 358?
+//-1 sec or 2 sec readings for wind speed?
+
 //based on:
 //http://cactus.io/hookups/weather/anemometer/davis/hookup-arduino-to-davis-anemometer-software
 
@@ -10,8 +14,16 @@
 
 int VaneValue; // raw analog value from wind vane
 int Direction; // translated 0 - 360 direction
-int CalDirection; // converted value with offset applied
+int16_t CalDirection; // converted value with offset applied
 int LastValue; // last direction value
+byte buf[4];
+
+//smothing
+const int numReadings = 50;
+int readings[numReadings];      // the readings from the analog input
+int readIndex = 0;              // the index of the current reading
+int total = 0;                  // the running total
+int average = 0;                // the average
 
 volatile bool IsDirSampleRequired;
 volatile bool IsSpeedSampleRequired;
@@ -21,6 +33,7 @@ volatile unsigned long CurrentRotations;
 volatile unsigned long ContactBounceTime; // Timer to avoid contact bounce in isr
 
 float WindSpeed; // speed miles per hour
+int16_t WindSpeedInt; //speed * 100
 
 void setup() {
 
@@ -32,7 +45,7 @@ void setup() {
   TimerCount = 0;
   Rotations = 0; // Set Rotations to 0 ready for calculations
   CurrentRotations = 0;
-  Serial.begin(9600);
+  Serial.begin(2000000);
 
   pinMode(WindSensorPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(WindSensorPin), isr_rotation, FALLING);
@@ -40,16 +53,17 @@ void setup() {
   // Setup the timer interupt
   Timer1.initialize(10000);// Timer interrupt every 0.01 seconds
   Timer1.attachInterrupt(isr_timer);
+
+  // initialize all the readings to 0:
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+
+  }
 }
 
 void loop() {
 
   getWindDirection();
-
-  // Only update the display if change greater than 5 degrees.
-  if (abs(CalDirection - LastValue) > 2) {
-    LastValue = CalDirection;
-  }
 
   if (IsDirSampleRequired) {
 
@@ -60,21 +74,29 @@ void loop() {
 
       //According to the Davis Anemometer technical document 1 mile per hour is equal to 1600 revolutions per hour.
       // convert to mp/h using the formula V=P(2.25/T)
-      // V = P(2.25/2) = P * 1.25
+      // V = P(2.25/1) = P * 2.25
       // V is speed in miles per hour, P is number of pulses per sample period, T is the sample period in seconds
       CurrentRotations = Rotations;
-      WindSpeed = CurrentRotations * 1.25;
+      WindSpeed = CurrentRotations * 2.25;
       Rotations = 0; // Reset count for next sample
     }
 
-    Serial.write(buffer, 64);
-    
-    //debug
-    //Serial.print(CurrentRotations); Serial.print("\t");
-    //Serial.print(WindSpeed); Serial.print("\t\t");
-    //Serial.print(CalDirection);
-    getHeading(CalDirection); Serial.print("\t\t");
-    getWindStrength(WindSpeed);
+    WindSpeedInt = WindSpeed * 100;
+
+        buf[0] = WindSpeedInt & 255;
+        buf[1] = (WindSpeedInt >> 8) & 255;
+        buf[2] = CalDirection & 255;
+        buf[3] = (CalDirection >> 8) & 255;
+        //buf[4] = 42;
+        Serial.write(buf, sizeof(buf));
+
+    //    //debug
+    //
+    //        Serial.print(CurrentRotations); Serial.print("\t");
+    //        Serial.print(WindSpeed); Serial.print("\t\t");
+    //        Serial.print(CalDirection);
+    //        getHeading(CalDirection); Serial.print("\t\t");
+    //        getWindStrength(WindSpeed);
 
   }
 }
@@ -83,7 +105,7 @@ void loop() {
 void isr_timer() {
   IsDirSampleRequired = true;
   TimerCount++;
-  if (TimerCount == 201)
+  if (TimerCount == 101)
   {
     IsSpeedSampleRequired = true;
     TimerCount = 0;
@@ -105,8 +127,32 @@ float getKnots(float speed) {
 
 // Get Wind Direction
 void getWindDirection() {
+
   VaneValue = analogRead(WindVanePin);
-  Direction = map(VaneValue, 0, 1023, 0, 359);
+
+  //smoothing, only change if the change is greater than 5
+  if (abs(VaneValue - LastValue) > 5) {
+    LastValue = VaneValue;
+  }
+
+  total = total - readings[readIndex];
+  // read from the sensor:
+  readings[readIndex] = LastValue;
+  // add the reading to the total:
+  total = total + readings[readIndex];
+  // advance to the next position in the array:
+  readIndex = readIndex + 1;
+
+  // if we're at the end of the array...
+  if (readIndex >= numReadings) {
+    // ...wrap around to the beginning:
+    readIndex = 0;
+  }
+
+  // calculate the average:
+  average = total / numReadings;
+
+  Direction = map(average, 0, 1023, 0, 359);
   CalDirection = Direction + VaneOffset;
   if (CalDirection > 360)
     CalDirection = CalDirection - 360;
