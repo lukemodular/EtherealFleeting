@@ -1,6 +1,6 @@
 //to Do:
 //-smooth wind speed reading (a lot)
-//-why is goint ot 187 at around 358?
+//-why is goint ot 187 and 165 at around 358?
 
 
 import processing.serial.*;
