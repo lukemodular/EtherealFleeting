@@ -8,32 +8,43 @@ import ch.bildspur.artnet.*;
 
 // setup pattern
 Pattern patterns[] = {
-  new TraceDown()
+  new TraceDown(),
+  new TraceDown(),
+  new TraceDown(),
+  new TraceDown(),
+  new FullWhite(),
+  new TraceDown(),
+  new TraceDown(),
+  new TraceDown(),
+  new TraceDown(),
+  new TraceDown(),
 };
 
-// setup timer
-long ellapseTimeMs = 0;
-long ellapseTimeMsStartTime = 0;
-float durationMs = 3000;
+
 
 // setup artnet 
 ArtNetClient artnet;
 int numUniverse = 10;
 int numChannels = 510;
 byte[] dmxData = new byte[numChannels];
+ArtnetDMX Artnetclass = new ArtnetDMX();
 
 // setup leds
 int numLeds = 88;
-color led[] = new color[numChannels/3];
+color led[][] = new color[numChannels/3][numUniverse];
 
 int size = 12;
 color[][] pixelBuffer = new color[numChannels/3][numUniverse];
+
+// setup timer
+long[] ellapseTimeMs = new long[numUniverse];
+long[] ellapseTimeMsStartTime = new long[numUniverse];
+float durationMs = 3000;
 
 void setup()
 {
   
   size(1020, 250);
-  
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -52,52 +63,51 @@ void draw()
   stroke(0);
   
   // choose pattern to run on LED strip
-  int pattern = 0;
+  // int pattern = 0;
   for (int i = 0; i <numChannels/3; i++){
-    if (ellapseTimeMs> durationMs){
-      ellapseTimeMsStartTime = 0;
+    for (int j = 0; j < numUniverse; j++) {
+    if (ellapseTimeMs[j]> durationMs){
+      ellapseTimeMsStartTime[j] = 0;
     } else {
       float position = i/(float)(numChannels/3);
-      float remaining = 1.0 - ellapseTimeMs/durationMs;
-      led[i] = patterns[pattern].paintLed(position, remaining, led[i]);
+      float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+      led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+      }
     }
   }
   
-  // draw pattern on screen
-  for (int i = 0; i < numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j++) {
-      fill(led[i]);
-      rect(i*size/2, j*size, size/2, size);
-    }
-  }
+  showPattern();
   
   updatePixelBuffer();
-  updateArtnet();
+  //oldUpdateArtnet();
+  Artnetclass.updateArtnet(artnet, dmxData, pixelBuffer);
 
-  // to broad cast data
-  //artnet.broadcastDmx(0, 0, dmxData);
-  
   updateEllapseTime();
+  println(frameRate);
   
   // show values
-  text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
+  //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
 }
 
 
 // clock function
 void updateEllapseTime() {
-  if (ellapseTimeMsStartTime == 0) {
-    ellapseTimeMsStartTime = millis();
-    ellapseTimeMs = 0;
+  for (int j = 0; j < numUniverse; j++) {
+    if (ellapseTimeMsStartTime[j] == 0) {
+      ellapseTimeMsStartTime[j] = millis();
+      ellapseTimeMs[j] = 0;
+    }
+    else {
+      ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
+    }
   }
-  else
-    ellapseTimeMs = millis() - ellapseTimeMsStartTime;
 }
 
 // storing pixels from screen
 void updatePixelBuffer(){
     for (int i = 0; i < numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
+      // read screen pixels and assign to pixel buffer
       pixelBuffer[i][j] = get(i*size/2+(size/4), j*size+size/2);
       fill(pixelBuffer[i][j]);
       stroke(pixelBuffer[i][j]);
@@ -107,9 +117,9 @@ void updatePixelBuffer(){
 }
 
 // fill dmx array, deploying to artnet
-void updateArtnet(){
-  for (int i = 0; i < numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j++) {
+void oldUpdateArtnet(){
+  for (int j = 0; j < numUniverse; j++) {  
+    for (int i = 0; i < numChannels/3; i++) {
       dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
       dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
       dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
@@ -117,5 +127,15 @@ void updateArtnet(){
       artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
     }
 
+  }
+}
+
+// draw pattern on screen
+void showPattern(){
+  for (int i = 0; i < numChannels/3; i++) {
+    for (int j = 0; j < numUniverse; j++) {
+      fill(led[i][j]);
+      rect(i*size/2, j*size, size/2, size);
+    }
   }
 }
