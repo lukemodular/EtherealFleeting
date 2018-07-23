@@ -7,6 +7,7 @@
 
 #include "TimerOne.h"
 #include <math.h>
+#include <SimpleMessageSystem.h>
 
 #define WindSensorPin (2) // The pin location of the anemometer sensor
 #define WindVanePin (A0) // The pin the wind vane sensor is connected to
@@ -51,7 +52,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(WindSensorPin), isr_rotation, FALLING);
 
   // Setup the timer interupt
-  Timer1.initialize(10000);// Timer interrupt every 0.01 seconds
+  Timer1.initialize(25000);// Timer interrupt every 0.025 seconds, 40fps
   Timer1.attachInterrupt(isr_timer);
 
   // initialize all the readings to 0:
@@ -105,7 +106,7 @@ void loop() {
 void isr_timer() {
   IsDirSampleRequired = true;
   TimerCount++;
-  if (TimerCount == 101)
+  if (TimerCount == 41)
   {
     IsSpeedSampleRequired = true;
     TimerCount = 0;

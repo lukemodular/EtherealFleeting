@@ -91,7 +91,7 @@ void draw()
 
   background(0);
   stroke(0);
-  
+
   readAnemometer();
 
   //change direction
@@ -177,7 +177,8 @@ void showPattern() {
 }
 
 void readAnemometer() {
-  if (myPort.available() > 0) {
+
+  while (myPort.available() > 0) {
     myPort.readBytes(inBuffer);
 
     if (inBuffer != null) {
@@ -185,8 +186,8 @@ void readAnemometer() {
 
       windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
       windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
-      //println(windSpeed);
-      //println(windDir);
+      println(windSpeed);
+      println(windDir);
       windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
     }
   }
