@@ -40,6 +40,7 @@ color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 long[] ellapseTimeMs = new long[numUniverse];
 long[] ellapseTimeMsStartTime = new long[numUniverse];
 float durationMs = 3000;
+boolean direction = true; 
 
 void setup()
 {
