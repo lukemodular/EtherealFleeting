@@ -4,6 +4,11 @@
 
 // to run from command-line 
 // processing-java --sketch="/home/pi/Documents/git/EtherealFleeting/rasPi/ArtnetTesting/" --run
+
+//to Do:
+//-smooth wind speed reading (a lot)
+//-why is goint ot 187 and 165 at around 358?
+
 import ch.bildspur.artnet.*;
 
 // setup pattern
@@ -57,6 +62,7 @@ color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 long[] ellapseTimeMs = new long[numUniverse];
 long[] ellapseTimeMsStartTime = new long[numUniverse];
 float durationMs = 3000;
+boolean direction = true; 
 
 void setup()
 {
@@ -80,25 +86,25 @@ void draw()
 
   background(0);
   stroke(0);
-
+  
+  //change direction
+  if (ellapseTimeMs[0]> durationMs) direction = !direction;
   // choose pattern to run on LED strip
-  // int pattern = 0;
-  boolean direct = true; 
+  // int pattern = 0;  
   for (int i = 0; i <numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
       if (ellapseTimeMs[j]> durationMs) {
         ellapseTimeMsStartTime[j] = 0;
-      } else if (direct==false) {
+      } else if (direction==true) {
         float position = i/(float)(numChannels/3);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
         led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
       } else {
-        float position = i/(float)(numChannels/6);
-        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+        float position = 1.0 - (i/(float)(numChannels/3));
+        float remaining = ellapseTimeMs[j]/durationMs;
         led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
       }
     }
-    direct = !direct;
   }
 
   showPattern();
