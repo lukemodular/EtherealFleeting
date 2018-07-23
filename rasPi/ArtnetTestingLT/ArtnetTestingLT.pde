@@ -11,7 +11,7 @@ Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
-  new TraceDown(),
+  new TraceDown(), 
   new TraceDown(), 
   //new FullWhite(), 
   new TraceDown(), 
@@ -22,7 +22,16 @@ Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
-  //new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
   new TraceDown()
 };
 
@@ -54,8 +63,8 @@ void setup()
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
-  
-  //frameRate(100);
+
+  frameRate(60);
 
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
