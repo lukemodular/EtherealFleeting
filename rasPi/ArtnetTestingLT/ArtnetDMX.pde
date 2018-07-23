@@ -12,7 +12,7 @@ public class ArtnetDMX {
       }
       // send dmx to localhost
       artnet.unicastDmx("192.168.2.11", 0, j, dmxData);
-      delay(1);
+      //delay(1);
       artnet.unicastDmx("192.168.2.12", 0, j, dmxData);
       delay(1);
       //artnet.unicastDmx("192.168.2.13", 0, j, dmxData);
@@ -21,9 +21,9 @@ public class ArtnetDMX {
       //delay(1);
       //artnet.unicastDmx("192.168.2.15", 0, j, dmxData);
       //delay(1);
+
+      // to broad cast data
+      //artnet.broadcastDmx(0, j, dmxData);
     }
   }
-
-  // to broad cast data
-  //artnet.broadcastDmx(0, 0, dmxData);
 }

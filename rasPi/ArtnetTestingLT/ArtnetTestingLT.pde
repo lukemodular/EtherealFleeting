@@ -11,6 +11,8 @@ Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
+  //new FadeTrace(),
+  //new FadeTrace(),
   new TraceDown(), 
   new TraceDown(), 
   //new FullWhite(), 
@@ -64,7 +66,7 @@ void setup()
   textAlign(CENTER, CENTER);
   textSize(20);
 
-  frameRate(60);
+  frameRate(40);
 
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
@@ -81,16 +83,22 @@ void draw()
 
   // choose pattern to run on LED strip
   // int pattern = 0;
+  boolean direct = true; 
   for (int i = 0; i <numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
       if (ellapseTimeMs[j]> durationMs) {
         ellapseTimeMsStartTime[j] = 0;
-      } else {
+      } else if (direct==false) {
         float position = i/(float)(numChannels/3);
+        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+      } else {
+        float position = i/(float)(numChannels/6);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
         led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
       }
     }
+    direct = !direct;
   }
 
   showPattern();
@@ -132,21 +140,6 @@ void updatePixelBuffer() {
   }
 }
 
-// fill dmx array, deploying to artnet
-void oldUpdateArtnet() {
-  for (int j = 0; j < numUniverse; j++) {  
-    for (int i = 0; i < numChannels/3; i++) {
-      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
-      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
-      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
-      // send dmx to localhost
-      //artnet.unicastDmx("192.168.2.11", 0, j, dmxData);
-      artnet.unicastDmx("192.168.2.12", 0, j, dmxData);
-      // send broadcast
-      //artnet.broadcastDmx(0, j, dmxData);
-    }
-  }
-}
 
 // draw pattern on screen
 void showPattern() {
@@ -157,3 +150,20 @@ void showPattern() {
     }
   }
 }
+
+
+//// fill dmx array, deploying to artnet
+//void oldUpdateArtnet() {
+//  for (int j = 0; j < numUniverse; j++) {  
+//    for (int i = 0; i < numChannels/3; i++) {
+//      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
+//      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
+//      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
+//      // send dmx to localhost
+//      //artnet.unicastDmx("192.168.2.11", 0, j, dmxData);
+//      artnet.unicastDmx("192.168.2.12", 0, j, dmxData);
+//      // send broadcast
+//      //artnet.broadcastDmx(0, j, dmxData);
+//    }
+//  }
+//}

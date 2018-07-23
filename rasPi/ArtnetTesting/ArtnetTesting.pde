@@ -62,16 +62,22 @@ void draw()
   background(0);
   stroke(0);
   
+  //change direction
+  if (ellapseTimeMs[0]> durationMs) direction = !direction;
   // choose pattern to run on LED strip
-  // int pattern = 0;
-  for (int i = 0; i <numChannels/3; i++){
+  // int pattern = 0;  
+  for (int i = 0; i <numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
-    if (ellapseTimeMs[j]> durationMs){
-      ellapseTimeMsStartTime[j] = 0;
-    } else {
-      float position = i/(float)(numChannels/3);
-      float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-      led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+      if (ellapseTimeMs[j]> durationMs) {
+        ellapseTimeMsStartTime[j] = 0;
+      } else if (direction==true) {
+        float position = i/(float)(numChannels/3);
+        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+      } else {
+        float position = 1.0 - (i/(float)(numChannels/3));
+        float remaining = ellapseTimeMs[j]/durationMs;
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
       }
     }
   }
