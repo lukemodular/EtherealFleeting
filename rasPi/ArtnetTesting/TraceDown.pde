@@ -11,6 +11,7 @@ public class TraceDown extends Pattern {
     return c;
 
     
+    // return fade
     return color(0,0,0);
   }
 }

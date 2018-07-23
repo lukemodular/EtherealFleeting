@@ -8,8 +8,8 @@ import ch.bildspur.artnet.*;
 
 // setup pattern
 Pattern patterns[] = {
-  new TraceDown(),
-  new TraceDown(),
+  new FadeTrace(),
+  new FadeTrace(),
   new TraceDown(),
   new TraceDown(),
   new FullWhite(),
