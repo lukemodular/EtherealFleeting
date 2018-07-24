@@ -8,6 +8,7 @@
 import ch.bildspur.artnet.*;
 import processing.serial.*;
 
+//___________________________
 // setup pattern
 Pattern patterns[] = {
   new TraceDown(), 
@@ -41,7 +42,7 @@ ArtnetDMX Artnetclass = new ArtnetDMX();
 
 //___________________________
 // stetup serial
-Serial myPort;  // Create object from Serial class
+Serial port;  // Create object from Serial class
 String data = "0 0";     // Data received from the serial port
 int[] nums;
 byte[] inBuffer = new byte[4];
@@ -79,8 +80,9 @@ void setup()
   artnet = new ArtNetClient(null);
   artnet.start();
 
+  // create port
   String portName = Serial.list()[0];
-  myPort = new Serial(this, portName, 2000000);
+  port = new Serial(this, portName, 2000000);
 }
 
 //_________________________________________________________
@@ -153,19 +155,6 @@ void updatePixelBuffer() {
   }
 }
 
-// fill dmx array, deploying to artnet
-void oldUpdateArtnet() {
-  for (int j = 0; j < numUniverse; j++) {  
-    for (int i = 0; i < numChannels/3; i++) {
-      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
-      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
-      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
-      // send dmx to localhost
-      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
-    }
-  }
-}
-
 // draw pattern on screen
 void showPattern() {
   for (int i = 0; i < numChannels/3; i++) {
@@ -177,9 +166,8 @@ void showPattern() {
 }
 
 void readAnemometer() {
-
-  while (myPort.available() > 0) {
-    myPort.readBytes(inBuffer);
+  while (port.available() > 0) {
+    port.readBytes(inBuffer);
 
     if (inBuffer != null) {
       //println(inBuffer);
@@ -192,3 +180,16 @@ void readAnemometer() {
     }
   }
 }
+
+//// fill dmx array, deploying to artnet
+//void oldUpdateArtnet() {
+//  for (int j = 0; j < numUniverse; j++) {  
+//    for (int i = 0; i < numChannels/3; i++) {
+//      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
+//      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
+//      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
+//      // send dmx to localhost
+//      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
+//    }
+//  }
+//}
