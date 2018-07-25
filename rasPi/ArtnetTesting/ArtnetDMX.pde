@@ -12,9 +12,9 @@ public class ArtnetDMX {
       }
       artnet.unicastDmx("10.10.10.11", 0, j, dmxData);
       artnet.unicastDmx("10.10.10.12", 0, j, dmxData);
-      //artnet.unicastDmx("10.10.10.13", 0, j, dmxData);
-      //artnet.unicastDmx("10.10.10.14", 0, j, dmxData);
-      //artnet.unicastDmx("10.10.10.15", 0, j, dmxData);
+      artnet.unicastDmx("10.10.10.13", 0, j, dmxData);
+      artnet.unicastDmx("10.10.10.14", 0, j, dmxData);
+      artnet.unicastDmx("10.10.10.15", 0, j, dmxData);
       delay(1);
 
       // to broad cast data
