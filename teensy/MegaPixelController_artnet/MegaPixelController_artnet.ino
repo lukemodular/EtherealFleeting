@@ -65,21 +65,21 @@ byte UniverseID = {0};
 short select_universe = ((SubnetID * 16) + UniverseID);
 
 // Set a different MAC address for each controller IMPORTANT!!!! you can change the last value but make sure its HEX!...
-//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
+byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x15 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x16 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x17 };
-byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x18 };
+//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x18 };
 
 
 // Uncomment if you want to use static IP
 //*******************************************************
 // ethernet interface ip address
-//IPAddress ip(10, 10, 10, 11);  //IP address of ethernet shield
+IPAddress ip(10, 10, 10, 11);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 12);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 13);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 14);  //IP address of ethernet shield
-IPAddress ip(10, 10, 10, 15);  //IP address of ethernet shield
+//IPAddress ip(10, 10, 10, 15);  //IP address of ethernet shield
 //*******************************************************
 
 // E1.31 and artenet is UDP.  One socket library will only allow one protocol to be defined.
