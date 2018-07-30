@@ -19,6 +19,8 @@ int16_t CalDirection; // converted value with offset applied
 int LastValue; // last direction value
 byte buf[4];
 
+int led = 13;
+
 //smothing
 const int numReadings = 50;
 int readings[numReadings];      // the readings from the analog input
@@ -42,6 +44,9 @@ void setup() {
 
   IsDirSampleRequired = false;
   IsSpeedSampleRequired = false;
+
+  pinMode(led, OUTPUT);
+  digitalWrite(led, HIGH);
 
   TimerCount = 0;
   Rotations = 0; // Set Rotations to 0 ready for calculations
@@ -98,6 +103,7 @@ void loop() {
     //        Serial.print(CalDirection);
     //        getHeading(CalDirection); Serial.print("\t\t");
     //        getWindStrength(WindSpeed);
+     
 
   }
 }
