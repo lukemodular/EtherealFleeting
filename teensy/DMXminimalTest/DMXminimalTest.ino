@@ -12,6 +12,8 @@
 #include <DmxSimple.h>
 
 void setup() {
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
   /* The most common pin for DMX output is pin 3, which DmxSimple
   ** uses by default. If you need to change that, do it here. */
   DmxSimple.usePin(1);
@@ -27,19 +29,19 @@ void setup() {
 void loop() {
 
   DmxSimple.write(1, 255);
-  delay(3500);
+  delay(500);
 
   DmxSimple.write(1, 0);
   delay(20000);
   
   DmxSimple.write(1, 255);
-  delay(3000);
+  delay(300);
 
   DmxSimple.write(1, 0);
   delay(15000);
 
   DmxSimple.write(1, 255);
-  delay(2500);
+  delay(500);
 
   DmxSimple.write(1, 0);
   delay(60000);

@@ -12,13 +12,14 @@ import processing.serial.*;
 // setup pattern
 boolean readFromScreen = false;
 boolean writeToScreen = true;
+boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
-  new FadeTrace(),
+  new FadeTrace(), 
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
@@ -27,7 +28,7 @@ Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
-  new TraceDown(),
+  new TraceDown(), 
   //new FadeTrace(), 
   //new FadeTrace(), 
   new TraceDown(), 
@@ -89,8 +90,10 @@ void setup()
   artnet.start();
 
   // create port
-  //String portName = Serial.list()[0];
-  //port = new Serial(this, portName, 2000000);
+  if (readAnemometerSerial == true) {
+    String portName = Serial.list()[0];
+    port = new Serial(this, portName, 2000000);
+  }
 }
 
 //_________________________________________________________
@@ -102,7 +105,9 @@ void draw()
   background(0);
   stroke(0);
 
-  //readAnemometer();
+  if (readAnemometerSerial == true) { 
+    readAnemometer();
+  }
 
   //change direction
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
@@ -115,16 +120,15 @@ void draw()
       } else if (direction==true) {
         float position = i/(float)(numChannels/3);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false){
+        if (readFromScreen == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
-       
       } else {
         float position = 1.0 - (i/(float)(numChannels/3));
         float remaining = ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false){
+        if (readFromScreen == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
@@ -136,11 +140,11 @@ void draw()
   if (writeToScreen == true) {
     showPattern();
   }
-  
-  if (readFromScreen == true){
+
+  if (readFromScreen == true) {
     updatePixelBuffer();
   } 
-  
+
   Artnetclass.updateArtnet(artnet, dmxData, pixelBuffer);
   //oldUpdateArtnet();
 
@@ -183,31 +187,33 @@ void showPattern() {
   for (int i = 0; i < numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
       // show only pixel buffer if not reading from screen
-      if (readFromScreen == false){
-          fill(pixelBuffer[i][j]);
-        } else {
-          fill(led[i][j]);
-        }
+      if (readFromScreen == false) {
+        fill(pixelBuffer[i][j]);
+      } else {
+        fill(led[i][j]);
+      }
       rect(i*size+size, j*size+size, size, size);
     }
   }
 }
 
-//void readAnemometer() {
-//  while (port.available() > 0) {
-//    port.readBytes(inBuffer);
+void readAnemometer() {
+  if (readAnemometerSerial == true) {
+    while (port.available() > 0) {
+      port.readBytes(inBuffer);
 
-//    if (inBuffer != null) {
-//      //println(inBuffer);
+      if (inBuffer != null) {
+        //println(inBuffer);
 
-//      windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
-//      windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
-//      println(windSpeed);
-//      println(windDir);
-//      windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
-//    }
-//  }
-//}
+        windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
+        windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
+        println(windSpeed);
+        println(windDir);
+        windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
+      }
+    }
+  }
+}
 
 // fill dmx array, deploying to artnet
 //void oldUpdateArtnet() {
