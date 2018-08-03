@@ -12,6 +12,7 @@ import processing.serial.*;
 // setup pattern
 boolean readFromScreen = false;
 boolean writeToScreen = true;
+
 Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
@@ -209,14 +210,14 @@ void showPattern() {
 //}
 
 // fill dmx array, deploying to artnet
-void oldUpdateArtnet() {
-  for (int j = 0; j < numUniverse; j++) {  
-    for (int i = 0; i < numChannels/3; i++) {
-      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
-      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
-      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
-      // send dmx to localhost
-      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
-    }
-  }
-}
+//void oldUpdateArtnet() {
+//  for (int j = 0; j < numUniverse; j++) {  
+//    for (int i = 0; i < numChannels/3; i++) {
+//      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
+//      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
+//      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
+//      // send dmx to localhost
+//      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
+//    }
+//  }
+//}
