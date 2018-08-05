@@ -50,7 +50,7 @@
 #define USE_OCTOWS2811
 #include <FastLED.h>
 #include <DmxSimple.h>
-
+#include <i2c_t3.h>
 
 
 //ARTNET STUFF
@@ -137,7 +137,7 @@ float fps = 0;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
-int dmxWriteCound = 0;
+int dmxWriteCount = 0;
 
 void setup() {
 
@@ -309,19 +309,28 @@ void initTest() //runs at board boot to make sure pixels are working
 
 void loop() {
 
-  if (dmxWriteCound == 
-      DmxSimple.write(1, 255);
+  dmxWriteCount = dmxWriteCount + 1;
+  if (dmxWriteCount == 1800000) {
+    DmxSimple.write(1, 255);
+    Serial.println("fogON");
+  }
 
-      //Process packets
-      int packetSize = Udp.parsePacket(); //Read UDP packet count
+  if (dmxWriteCount > 1870000) {
+    DmxSimple.write(1, 0);
+    Serial.println("fogOFF");
+    dmxWriteCount = 0;
+  }
+
+  //Process packets
+  int packetSize = Udp.parsePacket(); //Read UDP packet count
   if (c > UNIVERSE_COUNT) {
 
     c = 0;
   }
-  
+
   if (packetSize) {
-  //Serial.println(packetSize);
-  Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+    //Serial.println(packetSize);
+    Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
 
 
     //SACN
@@ -342,8 +351,6 @@ void loop() {
 
 
   }
-
-  DmxSimple.write(1, 0);
 
 }
 

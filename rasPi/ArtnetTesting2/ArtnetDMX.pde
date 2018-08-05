@@ -10,7 +10,7 @@ public class ArtnetDMX {
         dmxData[i*3+1] = (byte) green(pixelBuffer[i+xoffset][j]);
         dmxData[i*3+2] = (byte) blue(pixelBuffer[i+xoffset][j]);
       }
-      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
+      artnet.unicastDmx("10.10.10.11", 0, j, dmxData);
       //artnet.unicastDmx("10.10.10.12", 0, j, dmxData);
       //artnet.unicastDmx("10.10.10.13", 0, j, dmxData);
       //artnet.unicastDmx("10.10.10.14", 0, j, dmxData);
