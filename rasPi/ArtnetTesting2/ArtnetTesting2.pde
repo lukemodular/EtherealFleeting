@@ -10,7 +10,7 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = false;
+boolean readFromScreen = true;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
@@ -65,7 +65,7 @@ float windSpeedCal;
 // setup leds
 int numLeds = 88;
 color led[][] = new color[numChannels/3][numUniverse];
-int size = 2;
+int size = 8;
 color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 
 //___________________________
@@ -80,7 +80,7 @@ boolean direction = true;
 void setup()
 {
 
-  size(300, 80);
+  size(1500, 300);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -177,7 +177,7 @@ void updatePixelBuffer() {
       pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
       fill(pixelBuffer[i][j]);
       stroke(pixelBuffer[i][j]);
-      rect(50+i, 50+j, 1, 1);
+      rect( width/2+i, size * numUniverse + 100+j, 1, 1);
     }
   }
 }
