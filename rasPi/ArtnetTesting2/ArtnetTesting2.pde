@@ -11,7 +11,8 @@ import processing.serial.*;
 //___________________________
 // setup pattern
 boolean readFromScreen = false;
-boolean writeToScreen = true;
+boolean readFromImage = true;
+boolean writeToScreen = false;
 boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
@@ -29,11 +30,8 @@ Pattern patterns[] = {
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
   new TraceDown(), 
   new TraceDown(), 
-  //new FullWhite(), 
   new TraceDown(), 
   new TraceDown(), 
   new TraceDown(), 
@@ -65,7 +63,7 @@ float windSpeedCal;
 // setup leds
 int numLeds = 88;
 color led[][] = new color[numChannels/3][numUniverse];
-int size = 2;
+int size = 8;
 color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 
 //___________________________
@@ -75,12 +73,17 @@ long[] ellapseTimeMsStartTime = new long[numUniverse];
 float durationMs = 3000;
 boolean direction = true; 
 
+//___________________________
+// setup read image
+PImage texture;
+int ledPixels = 170;
+
 
 //_________________________________________________________
 void setup()
 {
-
-  size(300, 80);
+  //size(1500, 600);
+  size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -94,6 +97,13 @@ void setup()
     String portName = Serial.list()[0];
     port = new Serial(this, portName, 2000000);
   }
+
+  // load an image
+  texture = loadImage("fish.jpeg");
+  int dimension = texture.width * texture.height;
+  print(dimension + " " + texture.width  + " " + texture.height);
+  texture.loadPixels();
+  texture.updatePixels();
 }
 
 //_________________________________________________________
@@ -120,16 +130,16 @@ void draw()
       } else if (direction==true) {
         float position = i/(float)(numChannels/3);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        if (readFromScreen == false && readFromImage == false) {
+          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
       } else {
         float position = 1.0 - (i/(float)(numChannels/3));
         float remaining = ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        if (readFromScreen == false && readFromImage == false) {
+          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
@@ -139,11 +149,19 @@ void draw()
 
   if (writeToScreen == true) {
     showPattern();
+    image(texture, 0, 150);
   }
 
+  // read pattern from screen draw
   if (readFromScreen == true) {
-    updatePixelBuffer();
+    updatePixelBufferFromPattern();
   } 
+  
+    // read pattern from screen draw
+  if (readFromImage == true) {
+    updatePixelBufferFromImage();
+  } 
+
 
   Artnetclass.updateArtnet(artnet, dmxData, pixelBuffer);
   //oldUpdateArtnet();
@@ -169,15 +187,12 @@ void updateEllapseTime() {
 }
 
 // storing pixels from screen
-void updatePixelBuffer() {
+void updatePixelBufferFromPattern() {
   for (int i = 0; i < numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
       // read screen pixels and assign to pixel buffer
-      //pixelBuffer[i][j] = get(i*size/2+(size/4), j*size+size/2);
       pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
-      fill(pixelBuffer[i][j]);
-      stroke(pixelBuffer[i][j]);
-      rect(50+i, 50+j, 1, 1);
+      drawPixelBuffer(i, j);
     }
   }
 }
@@ -188,15 +203,38 @@ void showPattern() {
     for (int j = 0; j < numUniverse; j++) {
       // show only pixel buffer if not reading from screen
       if (readFromScreen == false) {
-        fill(pixelBuffer[i][j]);
+        drawPixelBuffer(i, j);
       } else {
         fill(led[i][j]);
+        rect(i*size, j*size, size, size);
       }
-      rect(i*size+size, j*size+size, size, size);
     }
   }
 }
 
+// scroll through an image from top to bottom
+void updatePixelBufferFromImage() {
+  int speed = frameCount;
+  int pixelFrame = speed % (texture.height - numUniverse); // account for number of universes
+  int xOffset = 150; // start more towards middle image
+  for (int j = 0; j < numUniverse; j++) {
+    for (int i = 0; i < numChannels/3; i++) {
+      noStroke();
+      int pixelPosition = xOffset + i + texture.width  * (j+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+      pixelBuffer[i][j] = texture.pixels[pixelPosition];
+      //drawPixelBuffer(i, j);
+    }
+  }
+}
+
+void drawPixelBuffer(int i, int j) {
+  fill(pixelBuffer[i][j]);
+  int pixelBSize = 2;
+  //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
+  rect(i*pixelBSize, 120+j*pixelBSize, pixelBSize, pixelBSize);
+  
+}
 void readAnemometer() {
   if (readAnemometerSerial == true) {
     while (port.available() > 0) {
