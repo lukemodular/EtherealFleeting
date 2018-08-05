@@ -10,8 +10,8 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = true;
-boolean writeToScreen = true;
+boolean readFromScreen = false;
+boolean writeToScreen = false;
 boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
@@ -81,8 +81,8 @@ int ledPixels = 170;
 //_________________________________________________________
 void setup()
 {
-
-  size(1500, 500);
+  //size(1500, 600);
+  size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -118,8 +118,10 @@ void draw()
     readAnemometer();
   }
 
-  image(texture, 0, 100);
-  
+  if (readFromScreen == true) {
+    image(texture, 0, 150);
+  }
+
   //change direction
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
   // choose pattern to run on LED strip
@@ -133,6 +135,7 @@ void draw()
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
         if (readFromScreen == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+          //updatePixelBufferFromImage();
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
@@ -141,6 +144,7 @@ void draw()
         float remaining = ellapseTimeMs[j]/durationMs;
         if (readFromScreen == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+          //updatePixelBufferFromImage();
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
@@ -152,10 +156,10 @@ void draw()
     showPattern();
   }
 
-  // choose between read from pattern or scrolling image
+  // read pattern from screen draw
   if (readFromScreen == true) {
-    //updatePixelBufferFromPattern();
-    updatePixelBufferFromImage();
+    updatePixelBufferFromPattern();
+    //updatePixelBufferFromImage();
   } 
 
 
@@ -163,7 +167,7 @@ void draw()
   //oldUpdateArtnet();
 
   updateEllapseTime();
-  //println(frameRate);
+  println(frameRate);
 
   // show values
   //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
@@ -187,10 +191,8 @@ void updatePixelBufferFromPattern() {
   for (int i = 0; i < numChannels/3; i++) {
     for (int j = 0; j < numUniverse; j++) {
       // read screen pixels and assign to pixel buffer
-      //pixelBuffer[i][j] = get(i*size/2+(size/4), j*size+size/2);
       pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
       drawPixelBuffer(i, j);
-
     }
   }
 }
@@ -206,7 +208,6 @@ void showPattern() {
         fill(led[i][j]);
         rect(i*size, j*size, size, size);
       }
-      
     }
   }
 }
@@ -222,17 +223,16 @@ void updatePixelBufferFromImage() {
       int pixelPosition = xOffset + i + texture.width  * (j+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
       pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, j);
+      //drawPixelBuffer(i, j);
     }
   }
 }
 
-void drawPixelBuffer(int i, int j){
-   fill(pixelBuffer[i][j]);
-   int pixelBSize = 2;
-   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
-   rect( width/2+i*pixelBSize, size * numUniverse + 100+j*pixelBSize, pixelBSize, pixelBSize);
-
+void drawPixelBuffer(int i, int j) {
+  fill(pixelBuffer[i][j]);
+  int pixelBSize = 2;
+  //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
+  rect(i*pixelBSize, 120+j*pixelBSize, pixelBSize, pixelBSize);
   
 }
 void readAnemometer() {
