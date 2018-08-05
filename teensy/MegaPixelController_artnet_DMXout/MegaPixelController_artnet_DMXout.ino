@@ -47,10 +47,11 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 #include <OctoWS2811.h>
+#define USE_OCTOWS2811
 #include <FastLED.h>
 #include <DmxSimple.h>
 
-#define USE_OCTOWS2811
+
 
 //ARTNET STUFF
 #define short_get_high_byte(x) ((HIGH_BYTE & x) >> 8)
@@ -135,6 +136,8 @@ int c = 0;
 float fps = 0;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
+
+int dmxWriteCound = 0;
 
 void setup() {
 
@@ -305,16 +308,20 @@ void initTest() //runs at board boot to make sure pixels are working
 }
 
 void loop() {
-  //Process packets
-  int packetSize = Udp.parsePacket(); //Read UDP packet count
-  DmxSimple.write(1, 255);
+
+  if (dmxWriteCound == 
+      DmxSimple.write(1, 255);
+
+      //Process packets
+      int packetSize = Udp.parsePacket(); //Read UDP packet count
   if (c > UNIVERSE_COUNT) {
 
     c = 0;
   }
+  
   if (packetSize) {
-    //Serial.println(packetSize);
-    Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+  //Serial.println(packetSize);
+  Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
 
 
     //SACN
@@ -327,18 +334,16 @@ void loop() {
       //Serial.println(count);
       //Serial.println(packetSize);
 
-
-
       artnetDMXReceived(packetBuffer, count, c); //process data function
 
       c = c + 1;
-
 
     }
 
 
   }
 
+  DmxSimple.write(1, 0);
 
 }
 
