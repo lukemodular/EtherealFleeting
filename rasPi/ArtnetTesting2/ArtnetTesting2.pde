@@ -10,41 +10,60 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = false;
-boolean readFromImage = true;
-boolean writeToScreen = false;
+boolean readFromScreen = true;
+boolean readFromImage = false;
+boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(),
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown(), 
+  //new TraceDown() 
   new FadeTrace(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown() 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace(), 
+  new FadeTrace()
 };
 
 
 //___________________________
 // setup artnet 
 ArtNetClient artnet;
-int numUniverse = 15;
-int numChannels = 510;
+int numUniverse = 12;
+int numChannels = 450;
 byte[] dmxData = new byte[numChannels];
 ArtnetDMX Artnetclass = new ArtnetDMX();
 
@@ -61,7 +80,7 @@ float windSpeedCal;
 
 //___________________________ 
 // setup leds
-int numLeds = 88;
+int numLeds = 300;
 color led[][] = new color[numChannels/3][numUniverse];
 int size = 8;
 color[][] pixelBuffer = new color[numChannels/3][numUniverse];
@@ -82,8 +101,8 @@ int ledPixels = 170;
 //_________________________________________________________
 void setup()
 {
-  //size(1500, 600);
-  size(400, 200);
+  size(1500, 600);
+  //size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -156,8 +175,8 @@ void draw()
   if (readFromScreen == true) {
     updatePixelBufferFromPattern();
   } 
-  
-    // read pattern from screen draw
+
+  // read pattern from screen draw
   if (readFromImage == true) {
     updatePixelBufferFromImage();
   } 
@@ -233,7 +252,6 @@ void drawPixelBuffer(int i, int j) {
   int pixelBSize = 2;
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
   rect(i*pixelBSize, 120+j*pixelBSize, pixelBSize, pixelBSize);
-  
 }
 void readAnemometer() {
   if (readAnemometerSerial == true) {

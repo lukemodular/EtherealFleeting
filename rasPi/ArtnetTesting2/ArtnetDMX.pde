@@ -1,8 +1,8 @@
 public class ArtnetDMX {
 
   void updateArtnet(ArtNetClient artnet, byte[] dmxData, color[][] pixelBuffer) {
-    int numChannels = 170*3;
-    int numUniverse = 15;
+    int numChannels = 150*3;
+    int numUniverse = 12;
     int xoffset = 0;
     for (int j = 0; j < numUniverse; j++) {
       for (int i = 0; i < numChannels/3; i++) {

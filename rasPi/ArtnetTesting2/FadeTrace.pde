@@ -4,10 +4,10 @@ public class FadeTrace extends Pattern {
 
     // create color
     int c = color(frameCount % 360, 80, 100);
-    if (abs(remaining/2-position) < .03)
+    if (abs(remaining/2-position) < .02)
       return c;
 
-    if (abs(1.0-remaining/2-position) < .03) 
+    if (abs(1.0-remaining/2-position) < .02) 
       return c;
 
 

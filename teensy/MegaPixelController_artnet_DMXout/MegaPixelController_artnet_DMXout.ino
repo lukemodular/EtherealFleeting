@@ -95,12 +95,12 @@ EthernetUDP Udp;
 #define ETHERNET_BUFFER 576 //540 is artnet leave at 636 for e1.31
 /// Change Values and needed.
 
-#define NUM_STRIPS 8
+#define NUM_STRIPS 6
 #define NUM_LEDS_PER_STRIP 300
-#define NUM_LEDS 2400 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-#define CHANNEL_COUNT 7200 //because it divides by 3 nicely
-#define UNIVERSE_COUNT 15
-#define LEDS_PER_UNIVERSE 170
+#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
+#define UNIVERSE_COUNT 12
+#define LEDS_PER_UNIVERSE 150
 
 //ARTNET PACKET
 const int art_net_header_size = 17;
@@ -310,12 +310,12 @@ void initTest() //runs at board boot to make sure pixels are working
 void loop() {
 
   dmxWriteCount = dmxWriteCount + 1;
-  if (dmxWriteCount == 1800000) {
+  if (dmxWriteCount == 1900000) {
     DmxSimple.write(1, 255);
     Serial.println("fogON");
   }
 
-  if (dmxWriteCount > 1870000) {
+  if (dmxWriteCount > 2010000) {
     DmxSimple.write(1, 0);
     Serial.println("fogOFF");
     dmxWriteCount = 0;
