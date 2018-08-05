@@ -11,6 +11,7 @@ import processing.serial.*;
 //___________________________
 // setup pattern
 boolean readFromScreen = false;
+boolean readFromImage = true;
 boolean writeToScreen = false;
 boolean readAnemometerSerial = false;
 
@@ -118,10 +119,6 @@ void draw()
     readAnemometer();
   }
 
-  if (readFromScreen == true) {
-    image(texture, 0, 150);
-  }
-
   //change direction
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
   // choose pattern to run on LED strip
@@ -133,18 +130,16 @@ void draw()
       } else if (direction==true) {
         float position = i/(float)(numChannels/3);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-          //updatePixelBufferFromImage();
+        if (readFromScreen == false && readFromImage == false) {
+          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
       } else {
         float position = 1.0 - (i/(float)(numChannels/3));
         float remaining = ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-          //updatePixelBufferFromImage();
+        if (readFromScreen == false && readFromImage == false) {
+          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         } else {
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
@@ -154,12 +149,17 @@ void draw()
 
   if (writeToScreen == true) {
     showPattern();
+    image(texture, 0, 150);
   }
 
   // read pattern from screen draw
   if (readFromScreen == true) {
     updatePixelBufferFromPattern();
-    //updatePixelBufferFromImage();
+  } 
+  
+    // read pattern from screen draw
+  if (readFromImage == true) {
+    updatePixelBufferFromImage();
   } 
 
 
