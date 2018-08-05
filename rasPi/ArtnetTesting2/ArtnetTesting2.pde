@@ -192,7 +192,7 @@ void showPattern() {
       } else {
         fill(led[i][j]);
       }
-      rect(i*size+size, j*size+size, size, size);
+      rect(i*size, j*size, size, size);
     }
   }
 }
