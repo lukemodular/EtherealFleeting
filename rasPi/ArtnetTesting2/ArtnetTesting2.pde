@@ -16,46 +16,46 @@ boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(),
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown(), 
-  //new TraceDown() 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace(), 
-  new FadeTrace()
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(),
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown(), 
+  new TraceDown() 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace(), 
+  //new FadeTrace()
 };
 
 
@@ -192,7 +192,6 @@ void draw()
   //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
 }
 
-
 // clock function
 void updateEllapseTime() {
   for (int j = 0; j < numUniverse; j++) {
@@ -253,6 +252,7 @@ void drawPixelBuffer(int i, int j) {
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
   rect(i*pixelBSize, 120+j*pixelBSize, pixelBSize, pixelBSize);
 }
+
 void readAnemometer() {
   if (readAnemometerSerial == true) {
     while (port.available() > 0) {
