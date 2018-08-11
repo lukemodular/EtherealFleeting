@@ -10,36 +10,24 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = true;
-boolean readFromImage = false;
+boolean readFromScreen = false;
+boolean readFromImage = true;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
 Pattern patterns[] = {
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(),
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown(), 
-  new TraceDown() 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
+  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown()
   //new FadeTrace(), 
   //new FadeTrace(), 
   //new FadeTrace(), 
@@ -62,10 +50,11 @@ Pattern patterns[] = {
 //___________________________
 // setup artnet 
 ArtNetClient artnet;
-int numUniverse = 12;
+int numUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
 int numChannels = 450;
 byte[] dmxData = new byte[numChannels];
 ArtnetDMX Artnetclass = new ArtnetDMX();
+color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 
 //___________________________
 // stetup serial
@@ -81,9 +70,9 @@ float windSpeedCal;
 //___________________________ 
 // setup leds
 int numLeds = 300;
-color led[][] = new color[numChannels/3][numUniverse];
+int numStrands = 24;
+color led[][];
 int size = 8;
-color[][] pixelBuffer = new color[numChannels/3][numUniverse];
 
 //___________________________
 // setup timer
@@ -101,12 +90,16 @@ int ledPixels = 170;
 //_________________________________________________________
 void setup()
 {
-  size(1500, 600);
+  size(2400, 600);
   //size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
 
+  // set the number of Leds on one strand
+  numLeds = 300;
+  //numLeds = numChannels/3
+  led = new color[numLeds][numStrands];
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
   artnet.start();
@@ -142,12 +135,13 @@ void draw()
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
   // choose pattern to run on LED strip
   // int pattern = 0;  
-  for (int i = 0; i <numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j++) {
+
+  for (int i = 0; i <numLeds; i++) {
+    for (int j = 0; j < numStrands; j++) {
       if (ellapseTimeMs[j]> durationMs) {
         ellapseTimeMsStartTime[j] = 0;
       } else if (direction==true) {
-        float position = i/(float)(numChannels/3);
+        float position = i/(float)(numLeds);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
         if (readFromScreen == false && readFromImage == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
@@ -155,7 +149,7 @@ void draw()
           led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
         }
       } else {
-        float position = 1.0 - (i/(float)(numChannels/3));
+        float position = 1.0 - (i/(float)(numLeds));
         float remaining = ellapseTimeMs[j]/durationMs;
         if (readFromScreen == false && readFromImage == false) {
           pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
@@ -165,10 +159,11 @@ void draw()
       }
     }
   }
-
+  
+  // show loaded image on screen
   if (writeToScreen == true) {
-    showPattern();
-    image(texture, 0, 150);
+    showPattern(numLeds);
+    image(texture, width*2/3, 200);
   }
 
   // read pattern from screen draw
@@ -206,23 +201,46 @@ void updateEllapseTime() {
 
 // storing pixels from screen
 void updatePixelBufferFromPattern() {
-  for (int i = 0; i < numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j++) {
-      // read screen pixels and assign to pixel buffer
-      pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
+
+  for (int i = 0; i < numChannels/3; i++) { 
+
+    // split pattern to alternate universes
+    // first half of pattern
+    for (int j = 0; j < numUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      pixelBuffer[i][j] = get(i*size +size/2, j/2*size+size/2);
+      drawPixelBuffer(i, j);
+    }
+    // second half of pattern
+    for (int j = 1; j < numUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
       drawPixelBuffer(i, j);
     }
   }
+  
+   /* //split 0-6, 7-12
+    // first half of pattern
+      for (int j = 0; j < numUniverse/2; j++) {
+      // read left screen pixels and assign to pixel buffer
+      pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
+      drawPixelBuffer(i, j);
+    }
+    // second half of pattern
+    for (int j = numUniverse/2; j < numUniverse; j++) {
+      // read right side of screen pixels and assign to pixel buffer
+      pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, (j-numUniverse/2)*size+size/2);
+      drawPixelBuffer(i, j);
+    }
+    */
 }
 
 // draw pattern on screen
-void showPattern() {
-  for (int i = 0; i < numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j++) {
+void showPattern(int numLeds) {
+  for (int i = 0; i < numLeds; i++) {
+    for (int j = 0; j < numStrands; j++) {
       // show only pixel buffer if not reading from screen
-      if (readFromScreen == false) {
-        drawPixelBuffer(i, j);
-      } else {
+      if (readFromScreen) {
         fill(led[i][j]);
         rect(i*size, j*size, size, size);
       }
@@ -232,25 +250,39 @@ void showPattern() {
 
 // scroll through an image from top to bottom
 void updatePixelBufferFromImage() {
-  int speed = frameCount;
+  int speed = frameCount/3;
   int pixelFrame = speed % (texture.height - numUniverse); // account for number of universes
   int xOffset = 150; // start more towards middle image
-  for (int j = 0; j < numUniverse; j++) {
-    for (int i = 0; i < numChannels/3; i++) {
+   for (int i = 0; i < numChannels/3; i++) {
+    for (int j = 0; j < numUniverse; j+=2) {
       noStroke();
-      int pixelPosition = xOffset + i + texture.width  * (j+pixelFrame);
+      int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
       pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      //drawPixelBuffer(i, j);
+      drawPixelBuffer(i, j);
+    }
+    for (int j = 1; j < numUniverse; j+=2) {
+      noStroke();
+      int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+      pixelBuffer[i][j] = texture.pixels[pixelPosition];
+      drawPixelBuffer(i, j);
     }
   }
 }
 
 void drawPixelBuffer(int i, int j) {
+  int YDrawOffset = 200;
+  int pixelBSize = 4;
   fill(pixelBuffer[i][j]);
-  int pixelBSize = 2;
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
-  rect(i*pixelBSize, 120+j*pixelBSize, pixelBSize, pixelBSize);
+  // recompose the split universes in space
+  if (j%2 == 0){
+    rect(i*pixelBSize, YDrawOffset +j/2*pixelBSize, pixelBSize, pixelBSize);
+  }
+ if (j%2 == 1){
+     rect((i+numLeds/2)*pixelBSize, YDrawOffset +(j-1)/2*pixelBSize, pixelBSize, pixelBSize);
+   }
 }
 
 void readAnemometer() {
@@ -270,16 +302,3 @@ void readAnemometer() {
     }
   }
 }
-
-// fill dmx array, deploying to artnet
-//void oldUpdateArtnet() {
-//  for (int j = 0; j < numUniverse; j++) {  
-//    for (int i = 0; i < numChannels/3; i++) {
-//      dmxData[i*3] = (byte) red(pixelBuffer[i][j]);
-//      dmxData[i*3+1] = (byte) green(pixelBuffer[i][j]);
-//      dmxData[i*3+2] = (byte) blue(pixelBuffer[i][j]);
-//      // send dmx to localhost
-//      artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
-//    }
-//  }
-//}
