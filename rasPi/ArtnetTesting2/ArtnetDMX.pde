@@ -27,7 +27,6 @@ public class ArtnetDMX {
   void updateFogArtnet(ArtNetClient artnet, byte[] dmxData, color[][] fogPixelBuffer, int universe, int channels) {
     int numChannels = channels; //12, only take reds
     int j = universe;
-    println("fog",universe);
     for (int i = 0; i < numChannels/3; i++) {
         dmxData[i*3] = (byte) red(fogPixelBuffer[i][j-1]);
         dmxData[i*3+1] = (byte) green(0);
