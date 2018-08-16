@@ -28,33 +28,26 @@ Pattern patterns[] = {
   new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
   new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
   new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown()
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace(), 
-  //new FadeTrace()
+  //new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), 
+  //new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), 
 };
 
 
 //___________________________
 // setup artnet 
 ArtNetClient artnet;
-int numUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
-int numChannels = 450;
-byte[] dmxData = new byte[numChannels];
-ArtnetDMX Artnetclass = new ArtnetDMX();
-color[][] pixelBuffer = new color[numChannels/3][numUniverse];
+int numLedUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
+int numLedChannels = 450;
+byte[] dmxData = new byte[numLedChannels];
+ArtnetDMX LedArtnetclass = new ArtnetDMX();
+color[][] pixelBuffer = new color[numLedChannels/3][numLedUniverse];
+int numFogChannels = 12; // 4 towers, only use red values
+int numFogUniverse = numLedUniverse + 1;
+int numFloodChannels = 21; // 7 msg x 3 channels
+ArtnetDMX FogArtnetclass = new ArtnetDMX();
+color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
+byte[] dmxFogData = new byte[numFogChannels];
+
 
 //___________________________
 // stetup serial
@@ -76,8 +69,8 @@ int size = 8;
 
 //___________________________
 // setup timer
-long[] ellapseTimeMs = new long[numUniverse];
-long[] ellapseTimeMsStartTime = new long[numUniverse];
+long[] ellapseTimeMs = new long[numLedUniverse];
+long[] ellapseTimeMsStartTime = new long[numLedUniverse];
 float durationMs = 3000;
 boolean direction = true; 
 
@@ -98,7 +91,7 @@ void setup()
 
   // set the number of Leds on one strand
   numLeds = 300;
-  //numLeds = numChannels/3
+  //numLeds = numLedChannels/3
   led = new color[numLeds][numStrands];
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
@@ -159,7 +152,7 @@ void draw()
       }
     }
   }
-  
+
   // show loaded image on screen
   if (writeToScreen == true) {
     showPattern(numLeds);
@@ -176,8 +169,10 @@ void draw()
     updatePixelBufferFromImage();
   } 
 
+  updateFogPixels();
 
-  Artnetclass.updateArtnet(artnet, dmxData, pixelBuffer);
+  LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numLedUniverse, numLedChannels);
+  FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
   //oldUpdateArtnet();
 
   updateEllapseTime();
@@ -189,7 +184,7 @@ void draw()
 
 // clock function
 void updateEllapseTime() {
-  for (int j = 0; j < numUniverse; j++) {
+  for (int j = 0; j < numLedUniverse; j++) {
     if (ellapseTimeMsStartTime[j] == 0) {
       ellapseTimeMsStartTime[j] = millis();
       ellapseTimeMs[j] = 0;
@@ -202,37 +197,37 @@ void updateEllapseTime() {
 // storing pixels from screen
 void updatePixelBufferFromPattern() {
 
-  for (int i = 0; i < numChannels/3; i++) { 
+  for (int i = 0; i < numLedChannels/3; i++) { 
 
     // split pattern to alternate universes
     // first half of pattern
-    for (int j = 0; j < numUniverse; j+=2) {
+    for (int j = 0; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
       pixelBuffer[i][j] = get(i*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, j);
+      drawPixelBuffer(i, j, pixelBuffer);
     }
     // second half of pattern
-    for (int j = 1; j < numUniverse; j+=2) {
+    for (int j = 1; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
       pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, j);
+      drawPixelBuffer(i, j, pixelBuffer);
     }
   }
-  
-   /* //split 0-6, 7-12
-    // first half of pattern
-      for (int j = 0; j < numUniverse/2; j++) {
-      // read left screen pixels and assign to pixel buffer
-      pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
-      drawPixelBuffer(i, j);
-    }
-    // second half of pattern
-    for (int j = numUniverse/2; j < numUniverse; j++) {
-      // read right side of screen pixels and assign to pixel buffer
-      pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, (j-numUniverse/2)*size+size/2);
-      drawPixelBuffer(i, j);
-    }
-    */
+
+  /* //split 0-6, 7-12
+   // first half of pattern
+   for (int j = 0; j < numLedUniverse/2; j++) {
+   // read left screen pixels and assign to pixel buffer
+   pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
+   drawPixelBuffer(i, j);
+   }
+   // second half of pattern
+   for (int j = numLedUniverse/2; j < numLedUniverse; j++) {
+   // read right side of screen pixels and assign to pixel buffer
+   pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, (j-numLedUniverse/2)*size+size/2);
+   drawPixelBuffer(i, j);
+   }
+   */
 }
 
 // draw pattern on screen
@@ -251,38 +246,39 @@ void showPattern(int numLeds) {
 // scroll through an image from top to bottom
 void updatePixelBufferFromImage() {
   int speed = frameCount/3;
-  int pixelFrame = speed % (texture.height - numUniverse); // account for number of universes
+  int pixelFrame = speed % (texture.height - numLedUniverse); // account for number of universes
   int xOffset = 150; // start more towards middle image
-   for (int i = 0; i < numChannels/3; i++) {
-    for (int j = 0; j < numUniverse; j+=2) {
+  for (int i = 0; i < numLedChannels/3; i++) {
+    for (int j = 0; j < numLedUniverse; j+=2) {
       noStroke();
       int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
       pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, j);
+      drawPixelBuffer(i, j, pixelBuffer);
     }
-    for (int j = 1; j < numUniverse; j+=2) {
+    for (int j = 1; j < numLedUniverse; j+=2) {
       noStroke();
       int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
       pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, j);
+      drawPixelBuffer(i, j, pixelBuffer);
     }
   }
 }
 
-void drawPixelBuffer(int i, int j) {
+void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
   int YDrawOffset = 200;
   int pixelBSize = 4;
-  fill(pixelBuffer[i][j]);
+  color[][] drawPixelBuffer = pixelBuffer;
+  fill(drawPixelBuffer[i][j]);
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
   // recompose the split universes in space
-  if (j%2 == 0){
+  if (j%2 == 0) {
     rect(i*pixelBSize, YDrawOffset +j/2*pixelBSize, pixelBSize, pixelBSize);
   }
- if (j%2 == 1){
-     rect((i+numLeds/2)*pixelBSize, YDrawOffset +(j-1)/2*pixelBSize, pixelBSize, pixelBSize);
-   }
+  if (j%2 == 1) {
+    rect((i+numLeds/2)*pixelBSize, YDrawOffset +(j-1)/2*pixelBSize, pixelBSize, pixelBSize);
+  }
 }
 
 void readAnemometer() {
@@ -300,5 +296,13 @@ void readAnemometer() {
         windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
       }
     }
+  }
+}
+
+void updateFogPixels() {
+  for (int i = 0; i < numFogChannels/3; i++){
+    int j = numFogUniverse;
+    fogPixelBuffer[i][j-1] = color(0, 100, 100);
+    drawPixelBuffer(i, j-1, fogPixelBuffer);
   }
 }
