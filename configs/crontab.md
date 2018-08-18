@@ -1,12 +1,12 @@
 # enter this into your user environment by `crontab -e`
 
-#trying this https://github.com/processing/processing/wiki/Running-without-a-Display
-# install sudo apt-get install xvfb libxrender1 libxtst6 libxi6 
+#trying headless instructions described here: https://github.com/processing/processing/wiki/Running-without-a-Display
+# sudo apt-get install xvfb libxrender1 libxtst6 libxi6 
 
-
+#set your shell
 SHELL=/bin/bash
 
-#for calling manually via ssh
+# if calling manually via ssh
 #DISPLAY=":0"
 
 # send to log for troubleshooting
