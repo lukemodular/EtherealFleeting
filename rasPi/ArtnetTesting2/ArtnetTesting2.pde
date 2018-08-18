@@ -74,6 +74,10 @@ long[] ellapseTimeMsStartTime = new long[numLedUniverse];
 float durationMs = 3000;
 boolean direction = true; 
 
+int numFogMachines = 4;
+long[] ellapseFogTimeMs = new long[numFogMachines];
+long[] ellapseFogTimeMsStartTime = new long[numFogMachines];
+
 //___________________________
 // setup read image
 PImage texture;
@@ -88,6 +92,7 @@ void setup()
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
+  frameRate = 44;
 
   // set the number of Leds on one strand
   numLeds = 300;
@@ -173,7 +178,7 @@ void draw()
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numLedUniverse, numLedChannels);
   FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
-  //oldUpdateArtnet();
+  delay(1);
 
   updateEllapseTime();
   println(frameRate);
@@ -304,5 +309,21 @@ void updateFogPixels() {
     int j = numFogUniverse;
     fogPixelBuffer[i][j-1] = color(0, 100, 100);
     drawPixelBuffer(i, j-1, fogPixelBuffer);
+ 
+    //fill(fogPixelBuffer[i][j-1]);
+    fill(color(255, 204, 0));
+    //rect(i*4,  (j-1)*4, 4, 4);
+    rect(100, 100, 4, 4); }
+}
+
+// clock function
+void updateEllapseFogTime() {
+  for (int i = 0; i < numFogMachines; i++) {
+    if (ellapseTimeMsStartTime[i] == 0) {
+      ellapseTimeMsStartTime[i] = millis();
+      ellapseTimeMs[i] = 0;
+    } else {
+      ellapseTimeMs[i] = millis() - ellapseTimeMsStartTime[i];
+    }
   }
 }
