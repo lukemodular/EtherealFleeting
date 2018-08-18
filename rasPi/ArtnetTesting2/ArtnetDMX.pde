@@ -19,7 +19,7 @@ public class ArtnetDMX {
       for (int tower = 0; tower < numTowers; tower++){
       if (j/numStripsInTower < towerNumber && towerNumber< j/numStripsInTower+1)
         artnet.unicastDmx(ipAddressList[towerNumber], 0, j, dmxData);
-        println("dmx", j, towerNumber);
+        //println("dmx", j, towerNumber);
       
       }
       //artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
