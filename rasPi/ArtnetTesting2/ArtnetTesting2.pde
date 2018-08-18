@@ -73,10 +73,12 @@ long[] ellapseTimeMs = new long[numLedUniverse];
 long[] ellapseTimeMsStartTime = new long[numLedUniverse];
 float durationMs = 3000;
 boolean direction = true; 
+boolean directionFog = true; 
 
 int numFogMachines = 4;
 long[] ellapseFogTimeMs = new long[numFogMachines];
 long[] ellapseFogTimeMsStartTime = new long[numFogMachines];
+float durationFogMs = 5000;
 
 //___________________________
 // setup read image
@@ -181,6 +183,12 @@ void draw()
   delay(1);
 
   updateEllapseTime();
+
+  if (ellapseFogTimeMs[0]> durationFogMs) {
+    directionFog = !directionFog;    
+    ellapseFogTimeMsStartTime[0] = 0;
+  }
+  updateEllapseFogTime();
   println(frameRate);
 
   // show values
@@ -305,25 +313,27 @@ void readAnemometer() {
 }
 
 void updateFogPixels() {
-  for (int i = 0; i < numFogChannels/3; i++){
+  for (int i = 0; i < numFogChannels/3; i++) {
     int j = numFogUniverse;
-    fogPixelBuffer[i][j-1] = color(0, 100, 100);
+    float colorFraction;
+    if (directionFog) {
+      colorFraction = ellapseFogTimeMs[0]/ durationFogMs;  
+    } else {
+      colorFraction = (durationFogMs-ellapseFogTimeMs[0])/ durationFogMs;
+    }
+    fogPixelBuffer[i][j-1] = color(0, 100* colorFraction, 100 * colorFraction);
     drawPixelBuffer(i, j-1, fogPixelBuffer);
- 
-    //fill(fogPixelBuffer[i][j-1]);
-    fill(color(255, 204, 0));
-    //rect(i*4,  (j-1)*4, 4, 4);
-    rect(100, 100, 4, 4); }
+  }
 }
 
 // clock function
 void updateEllapseFogTime() {
   for (int i = 0; i < numFogMachines; i++) {
-    if (ellapseTimeMsStartTime[i] == 0) {
-      ellapseTimeMsStartTime[i] = millis();
-      ellapseTimeMs[i] = 0;
+    if (ellapseFogTimeMsStartTime[i] == 0) {
+      ellapseFogTimeMsStartTime[i] = millis();
+      ellapseFogTimeMs[i] = 0;
     } else {
-      ellapseTimeMs[i] = millis() - ellapseTimeMsStartTime[i];
+      ellapseFogTimeMs[i] = millis() - ellapseFogTimeMsStartTime[i];
     }
   }
 }
