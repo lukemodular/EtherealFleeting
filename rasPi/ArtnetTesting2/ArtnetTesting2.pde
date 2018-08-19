@@ -88,7 +88,12 @@ boolean directionFog = true;
 int numFogMachines = 4;
 long[] ellapseFogTimeMs = new long[numFogMachines];
 long[] ellapseFogTimeMsStartTime = new long[numFogMachines];
+
+long[] ellapseFogEventTimeMs = new long[numFogMachines];
+long[] ellapseFogEventTimeMsStartTime = new long[numFogMachines];
+
 float durationFogMs = 5000;
+float durationFogEventMs = 5000;
 
 //___________________________
 // setup read image
@@ -334,12 +339,13 @@ void updateFogPixels() {
     } else {
       colorFraction = (durationFogMs-ellapseFogTimeMs[0])/ durationFogMs;
     }
+    colorFraction = 1;
     pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = color(0, 100* colorFraction, 100 * colorFraction);
     drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
 
-// clock function
+// fog clock function singe event
 void updateEllapseFogTime() {
   for (int i = 0; i < numFogMachines; i++) {
     if (ellapseFogTimeMsStartTime[i] == 0) {
@@ -347,6 +353,18 @@ void updateEllapseFogTime() {
       ellapseFogTimeMs[i] = 0;
     } else {
       ellapseFogTimeMs[i] = millis() - ellapseFogTimeMsStartTime[i];
+    }
+  }
+}
+
+// fog clock function event handling
+void updateEllapseFogTimeEvent() {
+  for (int i = 0; i < numFogMachines; i++) {
+    if (ellapseFogEventTimeMsStartTime[i] == 0) {
+      ellapseFogEventTimeMsStartTime[i] = millis();
+      ellapseFogEventTimeMs[i] = 0;
+    } else {
+      ellapseFogEventTimeMs[i] = millis() - ellapseFogEventTimeMsStartTime[i];
     }
   }
 }
