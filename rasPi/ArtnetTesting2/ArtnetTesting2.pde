@@ -39,7 +39,7 @@ ArtNetClient artnet;
 int numLedUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
 int numPixelUniverse = 56;
 int numLedChannels = 450;
-byte[] dmxData = new byte[numLedChannels];
+byte[][] dmxData = new byte[numPixelUniverse][numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
 color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
 //int numFogChannels = 12; // 4 towers, only use red values
@@ -170,7 +170,7 @@ void draw()
   }
 
   drawImageToScreen();
-  
+
   loadPixels();
 
 
@@ -184,6 +184,7 @@ void draw()
   } 
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
+  LedArtnetclass.sendArtnet(dmxData, numPixelUniverse);
 
   updateEllapseTime();
   if (ellapseFogTimeMs > durationFogMs) {
@@ -195,7 +196,6 @@ void draw()
   drawPixelBuffer();
 
   println(frameRate);
-
 }  // end draw()
 
 
@@ -234,8 +234,8 @@ void updatePixelBufferFromPattern() {
 
 
 void drawPatternToPatternBuffer() {
-  
-    // draw pattern
+
+  // draw pattern
   for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
 
@@ -260,7 +260,6 @@ void drawPatternToPatternBuffer() {
       }
     }
   }
-  
 }
 
 // draw pattern on screen
@@ -285,7 +284,7 @@ void drawPixelBuffer() {
   stroke(255);
   noFill();
   rect(0, 0, imageWidth, imageHeight);
-  
+
   noStroke();
 
   for (int i = 0; i < numLedChannels/3; i++) { 
@@ -293,24 +292,23 @@ void drawPixelBuffer() {
     // split pattern to odd and even rows
 
     // first half of pattern
-    for (int j = 0; j < numLedUniverse; j+=2) {
+    for (int j = 0; j < numPixelUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-      // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
-      drawPixelBuffer(i, j, pixelBuffer);
+      drawSinglePixelBuffer(i, j, pixelBuffer);
     }
 
     // second half of pattern
-    for (int j = 1; j < numLedUniverse; j+=2) {
+    for (int j = 1; j < numPixelUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-      drawPixelBuffer(i, j, pixelBuffer);
+      drawSinglePixelBuffer(i, j, pixelBuffer);
     }
   }
 }
 
 
-void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
-  color[][] drawPixelBuffer = pixelBuffer;
-  fill(drawPixelBuffer[i][j]);
+void drawSinglePixelBuffer(int i, int j, color[][] pixelBuffer) {
+  color[][] pixelBufferColor = pixelBuffer;
+  fill(pixelBufferColor[i][j]);
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
   // recompose the split universes in space
   if (j%2 == 0) {
@@ -390,11 +388,10 @@ void drawImageToScreen() {
     image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
     popMatrix();
   }
-  
+
   // blackout screen where image scrolls;
   fill(0);
   rect(0, imageHeight+1, imageWidth, 270-imageHeight);
-  
 }
 
 
@@ -418,7 +415,7 @@ void updatePixelBufferFromImage() {
 
       pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
       //print(texture.pixels[pixelPosition]);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+      drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
       //imageLed[i][j/2] = texture.pixels[pixelPosition];
     }
     for (int j = 1; j < numLedUniverse; j+=2) {
@@ -426,7 +423,7 @@ void updatePixelBufferFromImage() {
       int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
       pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+      drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
   }
 }
