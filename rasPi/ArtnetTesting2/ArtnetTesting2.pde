@@ -10,8 +10,8 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = false;
-boolean readFromImage = true;
+boolean readFromScreen = true;
+boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
@@ -141,7 +141,6 @@ void setup()
   for (int i = 0; i < images.length; i++) {
     images[i] = loadImage("cloud" + i + ".jpg");
   }
-  
 }
 
 
@@ -194,6 +193,15 @@ void draw()
     image(texture, width*2/3, 200);
   }
 
+
+  updateFogPixels();
+  drawImageToScreen();
+  loadPixels();
+  
+  // blackout screen where image scrolls;
+  fill(0);
+  rect(0, imageHeight+1, imageWidth, 270-imageHeight);
+
   // read pattern from screen draw
   if (readFromScreen == true) {
     updatePixelBufferFromPattern();
@@ -204,8 +212,6 @@ void draw()
     updatePixelBufferFromImage();
   } 
 
-  updateFogPixels();
-  drawImageToScreen();
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
   //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
@@ -218,6 +224,13 @@ void draw()
   }
   updateEllapseFogTime();
   println(frameRate);
+
+
+  // bounding box for image capture region
+  stroke(255);
+  noFill();
+  rect(0, 0, imageWidth, imageHeight);
+
 
   // show values
   //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
@@ -280,36 +293,10 @@ void showPattern(int numLeds) {
   for (int i = 0; i < numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
       // show only pixel buffer if not reading from screen
-      if (readFromScreen) {
-        fill(led[i][j]);
-        rect(i*size, j*size, size, size);
-      }
-    }
-  }
-}
-
-// scroll through an image from top to bottom
-void updatePixelBufferFromImage() {
-  int speed = frameCount/3;
-  int pixelFrame = speed % (texture.height - numLedUniverse); // account for number of universes
-  int xOffset = 150; // start more towards middle image
-  for (int i = 0; i < numLedChannels/3; i++) {
-    for (int j = 0; j < numLedUniverse; j+=2) {
-      noStroke();
-      int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
-      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      
-      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
-      //print(texture.pixels[pixelPosition]);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
-      //imageLed[i][j] = texture.pixels[pixelPosition];
-    }
-    for (int j = 1; j < numLedUniverse; j+=2) {
-      noStroke();
-      int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
-      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+      //if (readFromScreen) {
+      fill(led[i][j]);
+      rect(i*size, j*size, size, size);
+      //}
     }
   }
 }
@@ -378,14 +365,45 @@ int getPixelRow(int imageRow) {
 }
 
 // Draw image to screen;
-void drawImageToScreen(){
-    for (int i = 0; i <images.length; i++){
-      tint(255, imageBrightness(i));
-      int verticalPos = imageHeight - frameCount % imageHeight;
-      image(images[i], imageStartX, imageStartY+verticalPos - imageHeight, imageWidth, imageHeight);
-    }
+void drawImageToScreen() {
+  for (int i = 0; i <images.length; i++) {
+    tint(255, imageBrightness(i));
+    int verticalPos = imageHeight - frameCount % imageHeight;
+    image(images[i], imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
+    pushMatrix();
+    scale(1.0, -1.0);
+    image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
+    popMatrix();
+  }
 }
 
-int imageBrightness(int index){
+int imageBrightness(int index) {
   return (frameCount + index*20)% 255;
+}
+
+
+// scroll through an image from top to bottom
+void updatePixelBufferFromImage() {
+  int speed = frameCount/3;
+  int pixelFrame = speed % (texture.height - numLedUniverse); // account for number of universes
+  int xOffset = 150; // start more towards middle image
+  for (int i = 0; i < numLedChannels/3; i++) {
+    for (int j = 0; j < numLedUniverse; j+=2) {
+      noStroke();
+      int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      //print(texture.pixels[pixelPosition]);
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+      //imageLed[i][j/2] = texture.pixels[pixelPosition];
+    }
+    for (int j = 1; j < numLedUniverse; j+=2) {
+      noStroke();
+      int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+    }
+  }
 }
