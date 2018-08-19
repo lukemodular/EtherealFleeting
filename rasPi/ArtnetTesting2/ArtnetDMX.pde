@@ -4,7 +4,7 @@ public class ArtnetDMX {
 
   void updateArtnet(ArtNetClient artnet, byte[] dmxData, color[][] pixelBuffer, int universe, int channels) {
     int numChannels = channels;
-    int numUniverse = universe;
+    int numUniverse = 12;//universe;
     int numStripsInTower = 12;
     int numTowers = 4;
     int xoffset = 0;
@@ -14,19 +14,20 @@ public class ArtnetDMX {
         dmxData[i*3+1] = (byte) green(pixelBuffer[i+xoffset][j]);
         dmxData[i*3+2] = (byte) blue(pixelBuffer[i+xoffset][j]);
       }
+      float jayNumStripsInTower = j/numStripsInTower;
 
       int towerNumber =  (int)(j/numStripsInTower); 
-      for (int tower = 0; tower < numTowers; tower++){
-      if (j/numStripsInTower < towerNumber && towerNumber< j/numStripsInTower+1)
-        artnet.unicastDmx(ipAddressList[towerNumber], 0, j, dmxData);
-        //println("dmx", j, towerNumber);
-      
+      for (int tower = 0; tower < numTowers; tower++) {
+        if (jayNumStripsInTower < towerNumber && towerNumber< jayNumStripsInTower+1)
+          artnet.unicastDmx(ipAddressList[towerNumber], 0, j, dmxData);
+        println("dmx", j, towerNumber);
       }
-      //artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
+      artnet.unicastDmx("10.10.10.12", 0, j, dmxData);
 
-      //delay(1);
+      long start = System.nanoTime();
+      while (System.nanoTime()-start < 500000);
       // to broad cast data
-      //artnet.broadcastDmx(0, 0, dmxData);
+      artnet.broadcastDmx(0, 0, dmxData);
     }
   }
 
@@ -39,11 +40,8 @@ public class ArtnetDMX {
       dmxData[i*3+1] = (byte) green(0);
       dmxData[i*3+2] = (byte) blue(0);
     }    
-    artnet.unicastDmx("10.10.10.16", 0, j-1, dmxData);
-
-    //artnet.unicastDmx("10.10.10.117", 0, j, dmxData);
-
-
+    //artnet.unicastDmx("10.10.10.12", 0, j-1, dmxData);
+    //artnet.unicastDmx("10.10.10.12", 0, j, dmxData);
     // to broad cast data
     //artnet.broadcastDmx(0, 0, dmxData);
   }
