@@ -127,7 +127,6 @@ boolean match_artnet = 1;
 short Opcode = 0;
 
 
-
 //***********************************************************
 // BEGIN  Dont Modify unless you know what your doing below
 //***********************************************************
@@ -275,6 +274,52 @@ void artnetDMXReceived(unsigned char* pbuff, int count, int unicount) {
 }
 
 
+void artnetFogDMXReceived(unsigned char* pbuff, int count) {
+  if (count > CHANNEL_COUNT) count = CHANNEL_COUNT;
+  //read incoming universe
+  byte b = bytes_to_short(pbuff[15], pbuff[14]);
+  byte s = pbuff[12]; //sequence
+  //Serial.println(b);
+  //turn framing LED OFF
+  digitalWrite(4, HIGH);
+
+  //Serial.println(s );
+  if ( b >= UniverseID && b <= UniverseID + UNIVERSE_COUNT ) {
+
+
+    int ledNumber = (b - UniverseID) * LEDS_PER_UNIVERSE;
+    // artnet packets come in seperate RGB but we have to set each led's RGB value together
+    // this 'reads ahead' for all 3 colours before moving to the next led.
+    // Serial.println(b);
+    
+    for (int i = 18; i < 18 + count; i = i + 3) {
+      byte charValueR = pbuff[i];
+      byte charValueG = pbuff[i + 1];
+      byte charValueB = pbuff[i + 2];
+      //leds[ledNumber] = CRGB(charValueR, charValueG, charValueB);
+      //Serial.println(ledNumber);
+      //ledNumber++;
+    }
+
+
+
+    //Serial.println(unicount);
+    if (unicount == UNIVERSE_COUNT) {
+      //Turn Framing LED ON
+      //digitalWrite(4, LOW);
+      //LEDS.show();
+
+      //Frames Per Second Function fps(every_seconds)
+      //fps2(10);
+
+    }
+
+
+  }
+
+}
+
+
 //Check ARTNET header for Art-Net. Only look for three Char "A" "-" "t" in hex
 int checkARTHeaders(unsigned char* messagein, int messagelength) {
   if ( messagein[0] == 65 && messagein[3] == 45 && messagein[6] == 116) {
@@ -300,7 +345,6 @@ int checkARTHeaders(unsigned char* messagein, int messagelength) {
 }
 
 
-
 void initTest() //runs at board boot to make sure pixels are working
 {
   LEDS.showColor(CRGB(255, 0, 0)); //turn all pixels on red
@@ -313,6 +357,7 @@ void initTest() //runs at board boot to make sure pixels are working
   delay(1000);
   LEDS.showColor(CRGB(0, 0, 0)); //turn all pixels off
 }
+
 
 void loop() {
 
@@ -334,37 +379,34 @@ void loop() {
     c = 0;
   }
 
-  //Serial.println(c);
-
   if (packetSize) {
-
-    Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
-
-    if (c == 13 && c == 14) {
+    
+    if (c == 13 || c == 14) {
       if (c == 13) {
+        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
         int count = checkARTHeaders(packetBuffer, packetSize);
         if (count) {
           //Serial.println(count);
           //Serial.println(packetSize);
-          Udp.read(packetBuffer, ETHERNET_BUFFER);
-          Serial.println("fogUniverse");
           c = c + 1;
+          Serial.print(c);
+          Serial.println("fogUniverse");
         }
-
       }
       if (c == 14) {
+        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
         int count = checkARTHeaders(packetBuffer, packetSize);
         if (count) {
           //Serial.println(count);
           //Serial.println(packetSize);
-
-          Serial.println("fogUniverse");
           c = c + 1;
+          Serial.print(c);
+          Serial.println("floodUniverse");
         }
       }
-    }
-
-    else {
+    } else {
+      
+      Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
       //Serial.println(packetSize);
 
       //SACN
@@ -380,7 +422,8 @@ void loop() {
         artnetDMXReceived(packetBuffer, count, c); //process data function
 
         c = c + 1;
-
+        //Serial.print(c);
+        //Serial.println("LED Universe");
       }
 
     }
