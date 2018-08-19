@@ -8,12 +8,21 @@ public class ArtnetDMX {
   void updateArtnet(ArtNetClient artnet, byte[][] dmxData, color[][] pixelBuffer, int universe, int channels) {
     int numChannels = channels;
     int numUniverse = universe;
-
+     
+    color currentPixel;
+   
     for (int j = 0; j < numUniverse; j++) {
       for (int i = 0; i < numChannels/3; i++) {
-        dmxData[j][i*3] = (byte) red(pixelBuffer[i+xoffset][j]);
-        dmxData[j][i*3+1] = (byte) green(pixelBuffer[i+xoffset][j]);
-        dmxData[j][i*3+2] = (byte) blue(pixelBuffer[i+xoffset][j]);
+        //dmxData[j][i*3] = (byte) red(pixelBuffer[i+xoffset][j]);
+        //dmxData[j][i*3+1] = (byte) green(pixelBuffer[i+xoffset][j]);
+        //dmxData[j][i*3+2] = (byte) blue(pixelBuffer[i+xoffset][j]);
+        
+        currentPixel = pixelBuffer[i+xoffset][j];       
+        dmxData[j][i*3] = (byte)((currentPixel >> 16) & 0xFF);
+        dmxData[j][i*3+1] = (byte)((currentPixel >> 8) & 0xFF);
+        dmxData[j][i*3+2] = (byte)(currentPixel & 0xFF);
+        
+      
       }
     }
   }

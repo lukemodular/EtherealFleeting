@@ -384,7 +384,7 @@ void drawImageToScreen() {
     int verticalPos = imageHeight - frameCount % imageHeight;
     image(images[i], imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
     pushMatrix();
-    scale(1.0, -1.0);
+    //scale(1.0, -1.0);
     image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
     popMatrix();
   }
