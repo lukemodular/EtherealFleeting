@@ -190,17 +190,19 @@ void draw()
   // show loaded image on screen
   if (writeToScreen == true) {
     showPattern(numLeds);
-    image(texture, width*2/3, 200);
+    //draw loaded image to screen
+    //image(texture, width*2/3, 200);
   }
-
-
-  updateFogPixels();
+  
   drawImageToScreen();
   loadPixels();
   
   // blackout screen where image scrolls;
   fill(0);
   rect(0, imageHeight+1, imageWidth, 270-imageHeight);
+  
+  // fog pattern and draw
+  updateFogPixels();
 
   // read pattern from screen draw
   if (readFromScreen == true) {
@@ -212,12 +214,10 @@ void draw()
     updatePixelBufferFromImage();
   } 
 
-
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
   //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
 
   updateEllapseTime();
-
   if (ellapseFogTimeMs[0]> durationFogMs) {
     directionFog = !directionFog;    
     ellapseFogTimeMsStartTime[0] = 0;
@@ -225,12 +225,10 @@ void draw()
   updateEllapseFogTime();
   println(frameRate);
 
-
   // bounding box for image capture region
   stroke(255);
   noFill();
   rect(0, 0, imageWidth, imageHeight);
-
 
   // show values
   //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
@@ -261,10 +259,7 @@ void updatePixelBufferFromPattern() {
       pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
       drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
-
-
     // second half of pattern
-
     for (int j = 1; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
       pixelBuffer[i][getPixelRow(j)] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
