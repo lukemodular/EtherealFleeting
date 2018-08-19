@@ -39,15 +39,15 @@ ArtNetClient artnet;
 int numLedUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
 int numPixelUniverse = 56;
 int numLedChannels = 450;
-byte[] dmxData = new byte[numLedChannels];
+byte[][] dmxData = new byte[numPixelUniverse][numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
 color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
-int numFogChannels = 12; // 4 towers, only use red values
-int numFogUniverse = numLedUniverse + 1;
+//int numFogChannels = 12; // 4 towers, only use red values
+//int numFogUniverse = numLedUniverse + 1;
 int numFloodChannels = 21; // 7 msg x 3 channels
-ArtnetDMX FogArtnetclass = new ArtnetDMX();
-color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
-byte[] dmxFogData = new byte[numFogChannels];
+//ArtnetDMX FogArtnetclass = new ArtnetDMX();
+//color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
+//byte[] dmxFogData = new byte[numFogChannels];
 
 //___________________________
 // setup pixelbuffer
@@ -57,6 +57,8 @@ int numTowers = 4;
 int numStripsInTower = 12;
 int imageRows = 48;
 int pixelRowsInTower = numPixelUniverse/numTowers;
+int YDrawOffset = 150;
+int pixelBSize = 4;
 
 
 //___________________________
@@ -75,7 +77,7 @@ float windSpeedCal;
 int numLeds = 300;
 int numStrands = 24;
 color led[][];
-int size = 4;
+int size = 6;
 
 //___________________________
 // setup timer
@@ -86,11 +88,12 @@ boolean direction = true;
 boolean directionFog = true; 
 
 int numFogMachines = 4;
-long[] ellapseFogTimeMs = new long[numFogMachines];
-long[] ellapseFogTimeMsStartTime = new long[numFogMachines];
 
-long[] ellapseFogEventTimeMs = new long[numFogMachines];
-long[] ellapseFogEventTimeMsStartTime = new long[numFogMachines];
+long ellapseFogTimeMs;
+long ellapseFogTimeMsStartTime;
+
+long ellapseFogEventTimeMs;
+long ellapseFogEventTimeMsStartTime;
 
 float durationFogMs = 5000;
 float durationFogEventMs = 5000;
@@ -99,12 +102,20 @@ float durationFogEventMs = 5000;
 // setup read image
 PImage texture;
 int ledPixels = 170;
+color[][] imageLed = new color[numLedChannels/3][numLedUniverse];
+int imageStartX = 0;
+int imageStartY = 0;
+int imageWidth = 1800;
+int imageHeight = 24*6;
+int maxImages = 1; // total # of images
+// Declaring an array of images
+PImage[] images = new PImage[maxImages];
 
 
 //_________________________________________________________
 void setup()
 {
-  size(1200, 200);
+  size(1800, 270);
   //size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
@@ -115,6 +126,7 @@ void setup()
   numLeds = 300;
   //numLeds = numLedChannels/3
   led = new color[numLeds][numStrands];
+  imageLed = new color[numLeds][numStrands];
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
   artnet.start();
@@ -131,7 +143,12 @@ void setup()
   print(dimension + " " + texture.width  + " " + texture.height);
   texture.loadPixels();
   texture.updatePixels();
+
+  for (int i = 0; i < images.length; i++) {
+    images[i] = loadImage("cloud" + i + ".jpg");
+  }
 }
+
 
 //_________________________________________________________
 void draw()
@@ -148,67 +165,46 @@ void draw()
 
   //change direction
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
-  // choose pattern to run on LED strip
-  // int pattern = 0;  
 
-  for (int i = 0; i <numLeds; i++) {
-    for (int j = 0; j < numStrands; j++) {
-      if (ellapseTimeMs[j]> durationMs) {
-        ellapseTimeMsStartTime[j] = 0;
-      } else if (direction==true) {
-        float position = i/(float)(numLeds);
-        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false && readFromImage == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        } else {
-          led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-        }
-      } else {
-        float position = 1.0 - (i/(float)(numLeds));
-        float remaining = ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false && readFromImage == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        } else {
-          led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-        }
-      }
-    }
-  }
+  drawPatternToPatternBuffer();
 
   // show loaded image on screen
   if (writeToScreen == true) {
-    showPattern(numLeds);
-    image(texture, width*2/3, 200);
+    showPattern();
+    //draw loaded image to screen
+    //image(texture, width*2/3, 200);
   }
+
+  drawImageToScreen();
+
+  loadPixels();
+
+
+
+  // fog pattern and draw
+  updateFogPixels();
 
   // read pattern from screen draw
   if (readFromScreen == true) {
     updatePixelBufferFromPattern();
   } 
 
-  // read pattern from screen draw
-  if (readFromImage == true) {
-    updatePixelBufferFromImage();
-  } 
-
-  updateFogPixels();
-
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
-  //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
-  delay(1);
+  LedArtnetclass.sendArtnet(dmxData, numPixelUniverse);
 
   updateEllapseTime();
-
-  if (ellapseFogTimeMs[0]> durationFogMs) {
+  if (ellapseFogTimeMs > durationFogMs) {
     directionFog = !directionFog;    
-    ellapseFogTimeMsStartTime[0] = 0;
+    ellapseFogTimeMsStartTime = 0;
   }
   updateEllapseFogTime();
-  println(frameRate);
 
-  // show values
-  //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
-}
+  drawPixelBuffer();
+
+  println(frameRate);
+}  // end draw()
+
+
 
 // clock function
 void updateEllapseTime() {
@@ -222,6 +218,7 @@ void updateEllapseTime() {
   }
 }
 
+
 // storing pixels from screen
 void updatePixelBufferFromPattern() {
 
@@ -231,78 +228,93 @@ void updatePixelBufferFromPattern() {
     // first half of pattern
     for (int j = 0; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-      // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
       pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
-
-
     // second half of pattern
-
     for (int j = 1; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
       pixelBuffer[i][getPixelRow(j)] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
   }
-
-  /* //split 0-6, 7-12
-   // first half of pattern
-   for (int j = 0; j < numLedUniverse/2; j++) {
-   // read left screen pixels and assign to pixel buffer
-   pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
-   drawPixelBuffer(i, j);
-   }
-   // second half of pattern
-   for (int j = numLedUniverse/2; j < numLedUniverse; j++) {
-   // read right side of screen pixels and assign to pixel buffer
-   pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, (j-numLedUniverse/2)*size+size/2);
-   drawPixelBuffer(i, j);
-   }
-   */
 }
 
-// draw pattern on screen
-void showPattern(int numLeds) {
-  for (int i = 0; i < numLeds; i++) {
+
+void drawPatternToPatternBuffer() {
+
+  // draw pattern
+  for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
-      // show only pixel buffer if not reading from screen
-      if (readFromScreen) {
-        fill(led[i][j]);
-        rect(i*size, j*size, size, size);
+
+      if (ellapseTimeMs[j]> durationMs) {
+        ellapseTimeMsStartTime[j] = 0;
+      } else if (direction==true) {
+        float position = i/(float)(numLeds);
+        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+        // if (readFromScreen == false && readFromImage == false) {
+        //   pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
+        // } else {
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        // }
+      } else {
+        float position = 1.0 - (i/(float)(numLeds));
+        float remaining = ellapseTimeMs[j]/durationMs;
+        //if (readFromScreen == false && readFromImage == false) {
+        //  pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
+        //} else {
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        //}
       }
     }
   }
 }
 
-// scroll through an image from top to bottom
-void updatePixelBufferFromImage() {
-  int speed = frameCount/3;
-  int pixelFrame = speed % (texture.height - numLedUniverse); // account for number of universes
-  int xOffset = 150; // start more towards middle image
-  for (int i = 0; i < numLedChannels/3; i++) {
-    for (int j = 0; j < numLedUniverse; j+=2) {
-      noStroke();
-      int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
-      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
-    }
-    for (int j = 1; j < numLedUniverse; j+=2) {
-      noStroke();
-      int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
-      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+// draw pattern on screen
+void showPattern() {
+  for (int i = 0; i < numLeds; i++) {
+    for (int j = 0; j < numStrands; j++) {
+      // show only pixel buffer if not reading from screen
+      //if (readFromScreen) {
+      fill(led[i][j]);
+      rect(i*size, j*size, size, size);
+      //}
     }
   }
 }
 
-void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
-  int YDrawOffset = 100;
-  int pixelBSize = 3;
-  color[][] drawPixelBuffer = pixelBuffer;
-  fill(drawPixelBuffer[i][j]);
+
+
+// draw stored pixels from screen
+void drawPixelBuffer() {
+
+  // bounding box for image capture region
+  stroke(255);
+  noFill();
+  rect(0, 0, imageWidth, imageHeight);
+
+  noStroke();
+
+  for (int i = 0; i < numLedChannels/3; i++) { 
+
+    // split pattern to odd and even rows
+
+    // first half of pattern
+    for (int j = 0; j < numPixelUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      drawSinglePixelBuffer(i, j, pixelBuffer);
+    }
+
+    // second half of pattern
+    for (int j = 1; j < numPixelUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      drawSinglePixelBuffer(i, j, pixelBuffer);
+    }
+  }
+}
+
+
+void drawSinglePixelBuffer(int i, int j, color[][] pixelBuffer) {
+  color[][] pixelBufferColor = pixelBuffer;
+  fill(pixelBufferColor[i][j]);
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
   // recompose the split universes in space
   if (j%2 == 0) {
@@ -312,6 +324,8 @@ void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
     rect((i+numLeds/2)*pixelBSize, YDrawOffset +(j-1)/2*pixelBSize, pixelBSize, pixelBSize);
   }
 }
+
+
 
 void readAnemometer() {
   if (readAnemometerSerial == true) {
@@ -331,40 +345,42 @@ void readAnemometer() {
   }
 }
 
+
 void updateFogPixels() {
+  float colorFraction;
+  if (directionFog) {
+    colorFraction = ellapseFogTimeMs/ durationFogMs;
+  } else {
+    colorFraction = (durationFogMs-ellapseFogTimeMs)/ durationFogMs;
+  }
+
   for (int tower = 0; tower < numTowers; tower++) {
-    float colorFraction;
-    if (directionFog) {
-      colorFraction = ellapseFogTimeMs[0]/ durationFogMs;
-    } else {
-      colorFraction = (durationFogMs-ellapseFogTimeMs[0])/ durationFogMs;
-    }
     colorFraction = 1;
     pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = color(0, 100* colorFraction, 100 * colorFraction);
-    drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
+
+    // draw fog pixels seperately
+    //drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
 
 // fog clock function singe event
 void updateEllapseFogTime() {
-  for (int i = 0; i < numFogMachines; i++) {
-    if (ellapseFogTimeMsStartTime[i] == 0) {
-      ellapseFogTimeMsStartTime[i] = millis();
-      ellapseFogTimeMs[i] = 0;
-    } else {
-      ellapseFogTimeMs[i] = millis() - ellapseFogTimeMsStartTime[i];
-    }
+  if (ellapseFogTimeMsStartTime == 0) {
+    ellapseFogTimeMsStartTime = millis();
+    ellapseFogTimeMs = 0;
+  } else {
+    ellapseFogTimeMs = millis() - ellapseFogTimeMsStartTime;
   }
 }
 
 // fog clock function event handling
 void updateEllapseFogTimeEvent() {
   for (int i = 0; i < numFogMachines; i++) {
-    if (ellapseFogEventTimeMsStartTime[i] == 0) {
-      ellapseFogEventTimeMsStartTime[i] = millis();
-      ellapseFogEventTimeMs[i] = 0;
+    if (ellapseFogEventTimeMsStartTime == 0) {
+      ellapseFogEventTimeMsStartTime = millis();
+      ellapseFogEventTimeMs = 0;
     } else {
-      ellapseFogEventTimeMs[i] = millis() - ellapseFogEventTimeMsStartTime[i];
+      ellapseFogEventTimeMs = millis() - ellapseFogEventTimeMsStartTime;
     }
   }
 }
@@ -374,4 +390,56 @@ int getPixelRow(int imageRow) {
   int towerNumber =  (int)(imageRow/numStripsInTower); 
   int towerRow = imageRow%numStripsInTower;
   return towerNumber*pixelRowsInTower + towerRow;
+}
+
+
+// Draw image to screen;
+void drawImageToScreen() {
+  for (int i = 0; i <images.length; i++) {
+    tint(255, imageBrightness(i));
+    int verticalPos = imageHeight - frameCount % imageHeight;
+    image(images[i], imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
+    pushMatrix();
+    //scale(1.0, -1.0);
+    image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
+    popMatrix();
+  }
+
+  // blackout screen where image scrolls;
+  fill(0);
+  rect(0, imageHeight+1, imageWidth, 270-imageHeight);
+}
+
+
+int imageBrightness(int index) {
+  return (frameCount + index*20)% 255;
+}
+
+
+
+// @deprecated
+// scroll through an image from top to bottom
+void updatePixelBufferFromImage() {
+  int speed = frameCount/3;
+  int pixelFrame = speed % (texture.height - numLedUniverse); // account for number of universes
+  int xOffset = 150; // start more towards middle image
+  for (int i = 0; i < numLedChannels/3; i++) {
+    for (int j = 0; j < numLedUniverse; j+=2) {
+      noStroke();
+      int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      //print(texture.pixels[pixelPosition]);
+      drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
+      //imageLed[i][j/2] = texture.pixels[pixelPosition];
+    }
+    for (int j = 1; j < numLedUniverse; j+=2) {
+      noStroke();
+      int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
+      //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
+    }
+  }
 }
