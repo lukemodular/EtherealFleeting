@@ -10,8 +10,8 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = false;
-boolean readFromImage = true;
+boolean readFromScreen = true;
+boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
@@ -75,7 +75,7 @@ float windSpeedCal;
 int numLeds = 300;
 int numStrands = 24;
 color led[][];
-int size = 8;
+int size = 4;
 
 //___________________________
 // setup timer
@@ -99,7 +99,7 @@ int ledPixels = 170;
 //_________________________________________________________
 void setup()
 {
-  size(2400, 600);
+  size(1200, 200);
   //size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
@@ -226,8 +226,6 @@ void updatePixelBufferFromPattern() {
     // first half of pattern
     for (int j = 0; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-
-      print("num rows", pixelRows/4-2);
       // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
       pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
       drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
@@ -296,8 +294,8 @@ void updatePixelBufferFromImage() {
 }
 
 void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
-  int YDrawOffset = 200;
-  int pixelBSize = 4;
+  int YDrawOffset = 100;
+  int pixelBSize = 3;
   color[][] drawPixelBuffer = pixelBuffer;
   fill(drawPixelBuffer[i][j]);
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
