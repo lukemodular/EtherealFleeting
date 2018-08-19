@@ -37,10 +37,11 @@ Pattern patterns[] = {
 // setup artnet 
 ArtNetClient artnet;
 int numLedUniverse = 48; // 48 eventually + 4 for smoke machine and 4 for the lighting
+int numPixelUniverse = 56;
 int numLedChannels = 450;
 byte[] dmxData = new byte[numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
-color[][] pixelBuffer = new color[numLedChannels/3][numLedUniverse];
+color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
 int numFogChannels = 12; // 4 towers, only use red values
 int numFogUniverse = numLedUniverse + 1;
 int numFloodChannels = 21; // 7 msg x 3 channels
@@ -48,9 +49,18 @@ ArtnetDMX FogArtnetclass = new ArtnetDMX();
 color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
 byte[] dmxFogData = new byte[numFogChannels];
 
+//___________________________
+// setup pixelbuffer
+
+int pixelRows = 56;
+int numTowers = 4;
+int numStripsInTower = 12;
+int imageRows = 48;
+int pixelRowsInTower = numPixelUniverse/numTowers;
+
 
 //___________________________
-// stetup serial
+// setup serial
 Serial port;  // Create object from Serial class
 String data = "0 0";     // Data received from the serial port
 int[] nums;
@@ -178,8 +188,8 @@ void draw()
 
   updateFogPixels();
 
-  LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numLedUniverse, numLedChannels);
-  FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
+  LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
+  //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
   delay(1);
 
   updateEllapseTime();
@@ -216,14 +226,20 @@ void updatePixelBufferFromPattern() {
     // first half of pattern
     for (int j = 0; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-      pixelBuffer[i][j] = get(i*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, j, pixelBuffer);
+
+      print("num rows", pixelRows/4-2);
+      // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
+      pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
+
+
     // second half of pattern
+
     for (int j = 1; j < numLedUniverse; j+=2) {
       // read left screen pixels and assign to pixel buffer
-      pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, j, pixelBuffer);
+      pixelBuffer[i][getPixelRow(j)] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
   }
 
@@ -266,15 +282,15 @@ void updatePixelBufferFromImage() {
       noStroke();
       int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, j, pixelBuffer);
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
     for (int j = 1; j < numLedUniverse; j+=2) {
       noStroke();
       int pixelPosition = xOffset + (i+numLeds/2) + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
-      pixelBuffer[i][j] = texture.pixels[pixelPosition];
-      drawPixelBuffer(i, j, pixelBuffer);
+      pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
   }
 }
@@ -313,16 +329,15 @@ void readAnemometer() {
 }
 
 void updateFogPixels() {
-  for (int i = 0; i < numFogChannels/3; i++) {
-    int j = numFogUniverse;
+  for (int tower = 0; tower < numTowers; tower++) {
     float colorFraction;
     if (directionFog) {
-      colorFraction = ellapseFogTimeMs[0]/ durationFogMs;  
+      colorFraction = ellapseFogTimeMs[0]/ durationFogMs;
     } else {
       colorFraction = (durationFogMs-ellapseFogTimeMs[0])/ durationFogMs;
     }
-    fogPixelBuffer[i][j-1] = color(0, 100* colorFraction, 100 * colorFraction);
-    drawPixelBuffer(i, j-1, fogPixelBuffer);
+    pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = color(0, 100* colorFraction, 100 * colorFraction);
+    drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
 
@@ -336,4 +351,11 @@ void updateEllapseFogTime() {
       ellapseFogTimeMs[i] = millis() - ellapseFogTimeMsStartTime[i];
     }
   }
+}
+
+// space imagepixels to pixelbuffer
+int getPixelRow(int imageRow) {
+  int towerNumber =  (int)(imageRow/numStripsInTower); 
+  int towerRow = imageRow%numStripsInTower;
+  return towerNumber*pixelRowsInTower + towerRow;
 }
