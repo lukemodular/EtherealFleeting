@@ -10,8 +10,8 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = true;
-boolean readFromImage = false;
+boolean readFromScreen = false;
+boolean readFromImage = true;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
@@ -42,12 +42,12 @@ int numLedChannels = 450;
 byte[] dmxData = new byte[numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
 color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
-int numFogChannels = 12; // 4 towers, only use red values
-int numFogUniverse = numLedUniverse + 1;
+//int numFogChannels = 12; // 4 towers, only use red values
+//int numFogUniverse = numLedUniverse + 1;
 int numFloodChannels = 21; // 7 msg x 3 channels
-ArtnetDMX FogArtnetclass = new ArtnetDMX();
-color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
-byte[] dmxFogData = new byte[numFogChannels];
+//ArtnetDMX FogArtnetclass = new ArtnetDMX();
+//color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
+//byte[] dmxFogData = new byte[numFogChannels];
 
 //___________________________
 // setup pixelbuffer
@@ -57,6 +57,8 @@ int numTowers = 4;
 int numStripsInTower = 12;
 int imageRows = 48;
 int pixelRowsInTower = numPixelUniverse/numTowers;
+int YDrawOffset = 150;
+int pixelBSize = 4;
 
 
 //___________________________
@@ -75,7 +77,7 @@ float windSpeedCal;
 int numLeds = 300;
 int numStrands = 24;
 color led[][];
-int size = 4;
+int size = 6;
 
 //___________________________
 // setup timer
@@ -94,12 +96,20 @@ float durationFogMs = 5000;
 // setup read image
 PImage texture;
 int ledPixels = 170;
+color[][] imageLed = new color[numLedChannels/3][numLedUniverse];
+int imageStartX = 0;
+int imageStartY = 0;
+int imageWidth = 1800;
+int imageHeight = 24*6;
+int maxImages = 5; // total # of images
+// Declaring an array of images
+PImage[] images = new PImage[maxImages];
 
 
 //_________________________________________________________
 void setup()
 {
-  size(1200, 200);
+  size(1800, 270);
   //size(400, 200);
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
@@ -110,6 +120,7 @@ void setup()
   numLeds = 300;
   //numLeds = numLedChannels/3
   led = new color[numLeds][numStrands];
+  imageLed = new color[numLeds][numStrands];
   // create artnet client without buffer (no receving needed)
   artnet = new ArtNetClient(null);
   artnet.start();
@@ -126,7 +137,13 @@ void setup()
   print(dimension + " " + texture.width  + " " + texture.height);
   texture.loadPixels();
   texture.updatePixels();
+
+  for (int i = 0; i < images.length; i++) {
+    images[i] = loadImage("cloud" + i + ".jpg");
+  }
+  
 }
+
 
 //_________________________________________________________
 void draw()
@@ -146,6 +163,7 @@ void draw()
   // choose pattern to run on LED strip
   // int pattern = 0;  
 
+  // draw pattern
   for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
       if (ellapseTimeMs[j]> durationMs) {
@@ -153,19 +171,19 @@ void draw()
       } else if (direction==true) {
         float position = i/(float)(numLeds);
         float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false && readFromImage == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        } else {
-          led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-        }
+        // if (readFromScreen == false && readFromImage == false) {
+        //   pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
+        // } else {
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        // }
       } else {
         float position = 1.0 - (i/(float)(numLeds));
         float remaining = ellapseTimeMs[j]/durationMs;
-        if (readFromScreen == false && readFromImage == false) {
-          pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        } else {
-          led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
-        }
+        //if (readFromScreen == false && readFromImage == false) {
+        //  pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
+        //} else {
+        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        //}
       }
     }
   }
@@ -187,10 +205,10 @@ void draw()
   } 
 
   updateFogPixels();
+  drawImageToScreen();
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
   //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
-  delay(1);
 
   updateEllapseTime();
 
@@ -280,8 +298,11 @@ void updatePixelBufferFromImage() {
       noStroke();
       int pixelPosition = xOffset + i + texture.width  * (j/2+pixelFrame);
       //int pixelPosition = (i+mouseX) + texture.width * (j+mouseY+30);
+      
       pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
+      //print(texture.pixels[pixelPosition]);
       drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
+      //imageLed[i][j] = texture.pixels[pixelPosition];
     }
     for (int j = 1; j < numLedUniverse; j+=2) {
       noStroke();
@@ -294,8 +315,6 @@ void updatePixelBufferFromImage() {
 }
 
 void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
-  int YDrawOffset = 100;
-  int pixelBSize = 3;
   color[][] drawPixelBuffer = pixelBuffer;
   fill(drawPixelBuffer[i][j]);
   //rect(i*pixelBSize, (j*pixelBSize), pixelBSize, pixelBSize);
@@ -356,4 +375,17 @@ int getPixelRow(int imageRow) {
   int towerNumber =  (int)(imageRow/numStripsInTower); 
   int towerRow = imageRow%numStripsInTower;
   return towerNumber*pixelRowsInTower + towerRow;
+}
+
+// Draw image to screen;
+void drawImageToScreen(){
+    for (int i = 0; i <images.length; i++){
+      tint(255, imageBrightness(i));
+      int verticalPos = imageHeight - frameCount % imageHeight;
+      image(images[i], imageStartX, imageStartY+verticalPos - imageHeight, imageWidth, imageHeight);
+    }
+}
+
+int imageBrightness(int index){
+  return (frameCount + index*20)% 255;
 }
