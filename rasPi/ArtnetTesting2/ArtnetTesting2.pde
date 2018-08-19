@@ -10,8 +10,8 @@ import processing.serial.*;
 
 //___________________________
 // setup pattern
-boolean readFromScreen = false;
-boolean readFromImage = true;
+boolean readFromScreen = true;
+boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
@@ -179,8 +179,8 @@ void draw()
   updateFogPixels();
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numLedUniverse, numLedChannels);
-  FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
-  delay(1);
+ // FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
+ // delay(1);
 
   updateEllapseTime();
 
@@ -304,8 +304,8 @@ void readAnemometer() {
 
         windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
         windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
-        println(windSpeed);
-        println(windDir);
+        //println(windSpeed);
+       // println(windDir);
         windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
       }
     }

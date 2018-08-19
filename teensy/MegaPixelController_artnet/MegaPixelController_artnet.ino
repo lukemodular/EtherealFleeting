@@ -65,8 +65,8 @@ byte UniverseID = {0};
 short select_universe = ((SubnetID * 16) + UniverseID);
 
 // Set a different MAC address for each controller IMPORTANT!!!! you can change the last value but make sure its HEX!...
-byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
-//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x15 };
+//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
+byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x15 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x16 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x17 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x18 };
@@ -75,8 +75,8 @@ byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
 // Uncomment if you want to use static IP
 //*******************************************************
 // ethernet interface ip address
-IPAddress ip(10, 10, 10, 11);  //IP address of ethernet shield
-//IPAddress ip(10, 10, 10, 12);  //IP address of ethernet shield
+//IPAddress ip(10, 10, 10, 11);  //IP address of ethernet shield
+IPAddress ip(10, 10, 10, 12);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 13);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 14);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 15);  //IP address of ethernet shield
@@ -92,12 +92,12 @@ EthernetUDP Udp;
 #define ETHERNET_BUFFER 576 //540 is artnet leave at 636 for e1.31
 /// Change Values and needed.
 
-#define NUM_STRIPS 8
+#define NUM_STRIPS 6
 #define NUM_LEDS_PER_STRIP 300
-#define NUM_LEDS 2400 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-#define CHANNEL_COUNT 7200 //because it divides by 3 nicely
-#define UNIVERSE_COUNT 15
-#define LEDS_PER_UNIVERSE 170
+#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
+#define UNIVERSE_COUNT 12
+#define LEDS_PER_UNIVERSE 150
 
 //ARTNET PACKET
 const int art_net_header_size = 17;
@@ -216,15 +216,17 @@ void artnetDMXReceived(unsigned char* pbuff, int count, int unicount) {
   //read incoming universe
   byte b = bytes_to_short(pbuff[15], pbuff[14])
            byte s = pbuff[12]; //sequence
-  //Serial.println(b);
+  
+  Serial.println(b);
+  Serial.print("unicount");
+  Serial.println(unicount);
   //turn framing LED OFF
   digitalWrite(4, HIGH);
 
   //Serial.println(s );
+  
   if ( b >= UniverseID && b <= UniverseID + UNIVERSE_COUNT ) {
-
-
-
+     
     int ledNumber = (b - UniverseID) * LEDS_PER_UNIVERSE;
     // artnet packets come in seperate RGB but we have to set each led's RGB value together
     // this 'reads ahead' for all 3 colours before moving to the next led.
@@ -234,15 +236,16 @@ void artnetDMXReceived(unsigned char* pbuff, int count, int unicount) {
       byte charValueG = pbuff[i + 1];
       byte charValueB = pbuff[i + 2];
       leds[ledNumber] = CRGB(charValueR, charValueG, charValueB);
-      //Serial.println(ledNumber);
+     // Serial.println(ledNumber);
       ledNumber++;
     }
 
 
-
-    //Serial.println(unicount);
+   
+   // Serial.println(unicount);
     if (unicount == UNIVERSE_COUNT) {
       //Turn Framing LED ON
+      Serial.println("LEDS up to count");
       digitalWrite(4, LOW);
       LEDS.show();
 
