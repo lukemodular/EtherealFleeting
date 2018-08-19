@@ -88,8 +88,8 @@ boolean direction = true;
 boolean directionFog = true; 
 
 int numFogMachines = 4;
-long[] ellapseFogTimeMs = new long[numFogMachines];
-long[] ellapseFogTimeMsStartTime = new long[numFogMachines];
+long ellapseFogTimeMs = 0;
+long ellapseFogTimeMsStartTime = 0;
 float durationFogMs = 5000;
 
 //___________________________
@@ -101,7 +101,7 @@ int imageStartX = 0;
 int imageStartY = 0;
 int imageWidth = 1800;
 int imageHeight = 24*6;
-int maxImages = 5; // total # of images
+int maxImages = 1; // total # of images
 // Declaring an array of images
 PImage[] images = new PImage[maxImages];
 
@@ -159,12 +159,86 @@ void draw()
 
   //change direction
   if (ellapseTimeMs[0]> durationMs) direction = !direction;
-  // choose pattern to run on LED strip
-  // int pattern = 0;  
 
-  // draw pattern
+  drawPatternToPatternBuffer();
+
+  // show loaded image on screen
+  if (writeToScreen == true) {
+    showPattern();
+    //draw loaded image to screen
+    //image(texture, width*2/3, 200);
+  }
+
+  drawImageToScreen();
+  
+  loadPixels();
+
+
+
+  // fog pattern and draw
+  updateFogPixels();
+
+  // read pattern from screen draw
+  if (readFromScreen == true) {
+    updatePixelBufferFromPattern();
+  } 
+
+  LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
+
+  updateEllapseTime();
+  if (ellapseFogTimeMs > durationFogMs) {
+    directionFog = !directionFog;    
+    ellapseFogTimeMsStartTime = 0;
+  }
+  updateEllapseFogTime();
+
+  drawPixelBuffer();
+
+  println(frameRate);
+
+}  // end draw()
+
+
+
+// clock function
+void updateEllapseTime() {
+  for (int j = 0; j < numLedUniverse; j++) {
+    if (ellapseTimeMsStartTime[j] == 0) {
+      ellapseTimeMsStartTime[j] = millis();
+      ellapseTimeMs[j] = 0;
+    } else {
+      ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
+    }
+  }
+}
+
+
+// storing pixels from screen
+void updatePixelBufferFromPattern() {
+
+  for (int i = 0; i < numLedChannels/3; i++) { 
+
+    // split pattern to alternate universes
+    // first half of pattern
+    for (int j = 0; j < numLedUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
+    }
+    // second half of pattern
+    for (int j = 1; j < numLedUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      pixelBuffer[i][getPixelRow(j)] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
+    }
+  }
+}
+
+
+void drawPatternToPatternBuffer() {
+  
+    // draw pattern
   for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
+
       if (ellapseTimeMs[j]> durationMs) {
         ellapseTimeMsStartTime[j] = 0;
       } else if (direction==true) {
@@ -186,105 +260,11 @@ void draw()
       }
     }
   }
-
-  // show loaded image on screen
-  if (writeToScreen == true) {
-    showPattern(numLeds);
-    //draw loaded image to screen
-    //image(texture, width*2/3, 200);
-  }
   
-  drawImageToScreen();
-  loadPixels();
-  
-  // blackout screen where image scrolls;
-  fill(0);
-  rect(0, imageHeight+1, imageWidth, 270-imageHeight);
-  
-  // fog pattern and draw
-  updateFogPixels();
-
-  // read pattern from screen draw
-  if (readFromScreen == true) {
-    updatePixelBufferFromPattern();
-  } 
-
-  // read pattern from screen draw
-  if (readFromImage == true) {
-    updatePixelBufferFromImage();
-  } 
-
-  LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
-  //FogArtnetclass.updateFogArtnet(artnet, dmxFogData, fogPixelBuffer, numFogUniverse, numFogChannels);
-
-  updateEllapseTime();
-  if (ellapseFogTimeMs[0]> durationFogMs) {
-    directionFog = !directionFog;    
-    ellapseFogTimeMsStartTime[0] = 0;
-  }
-  updateEllapseFogTime();
-  println(frameRate);
-
-  // bounding box for image capture region
-  stroke(255);
-  noFill();
-  rect(0, 0, imageWidth, imageHeight);
-
-  // show values
-  //text("R: " + (int)red(c) + " Green: " + (int)green(c) + " Blue: " + (int)blue(c), width-200, height-50);
-}
-
-// clock function
-void updateEllapseTime() {
-  for (int j = 0; j < numLedUniverse; j++) {
-    if (ellapseTimeMsStartTime[j] == 0) {
-      ellapseTimeMsStartTime[j] = millis();
-      ellapseTimeMs[j] = 0;
-    } else {
-      ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
-    }
-  }
-}
-
-// storing pixels from screen
-void updatePixelBufferFromPattern() {
-
-  for (int i = 0; i < numLedChannels/3; i++) { 
-
-    // split pattern to alternate universes
-    // first half of pattern
-    for (int j = 0; j < numLedUniverse; j+=2) {
-      // read left screen pixels and assign to pixel buffer
-      // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
-      pixelBuffer[i][getPixelRow(j)] = get(i*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
-    }
-    // second half of pattern
-    for (int j = 1; j < numLedUniverse; j+=2) {
-      // read left screen pixels and assign to pixel buffer
-      pixelBuffer[i][getPixelRow(j)] = get((i+numLeds/2)*size +size/2, j/2*size+size/2);
-      drawPixelBuffer(i, getPixelRow(j), pixelBuffer);
-    }
-  }
-
-  /* //split 0-6, 7-12
-   // first half of pattern
-   for (int j = 0; j < numLedUniverse/2; j++) {
-   // read left screen pixels and assign to pixel buffer
-   pixelBuffer[i][j] = get(i*size +size/2, j*size+size/2);
-   drawPixelBuffer(i, j);
-   }
-   // second half of pattern
-   for (int j = numLedUniverse/2; j < numLedUniverse; j++) {
-   // read right side of screen pixels and assign to pixel buffer
-   pixelBuffer[i][j] = get((i+numLeds/2)*size +size/2, (j-numLedUniverse/2)*size+size/2);
-   drawPixelBuffer(i, j);
-   }
-   */
 }
 
 // draw pattern on screen
-void showPattern(int numLeds) {
+void showPattern() {
   for (int i = 0; i < numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
       // show only pixel buffer if not reading from screen
@@ -295,6 +275,38 @@ void showPattern(int numLeds) {
     }
   }
 }
+
+
+
+// draw stored pixels from screen
+void drawPixelBuffer() {
+
+  // bounding box for image capture region
+  stroke(255);
+  noFill();
+  rect(0, 0, imageWidth, imageHeight);
+  
+  noStroke();
+
+  for (int i = 0; i < numLedChannels/3; i++) { 
+
+    // split pattern to odd and even rows
+
+    // first half of pattern
+    for (int j = 0; j < numLedUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      // for (int pixels = 0; pixels < pixelRows/3-2; pixels+=2) {
+      drawPixelBuffer(i, j, pixelBuffer);
+    }
+
+    // second half of pattern
+    for (int j = 1; j < numLedUniverse; j+=2) {
+      // read left screen pixels and assign to pixel buffer
+      drawPixelBuffer(i, j, pixelBuffer);
+    }
+  }
+}
+
 
 void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
   color[][] drawPixelBuffer = pixelBuffer;
@@ -308,6 +320,8 @@ void drawPixelBuffer(int i, int j, color[][] pixelBuffer) {
     rect((i+numLeds/2)*pixelBSize, YDrawOffset +(j-1)/2*pixelBSize, pixelBSize, pixelBSize);
   }
 }
+
+
 
 void readAnemometer() {
   if (readAnemometerSerial == true) {
@@ -327,30 +341,35 @@ void readAnemometer() {
   }
 }
 
+
 void updateFogPixels() {
+  float colorFraction;
+  if (directionFog) {
+    colorFraction = ellapseFogTimeMs/ durationFogMs;
+  } else {
+    colorFraction = (durationFogMs-ellapseFogTimeMs)/ durationFogMs;
+  }
+
   for (int tower = 0; tower < numTowers; tower++) {
-    float colorFraction;
-    if (directionFog) {
-      colorFraction = ellapseFogTimeMs[0]/ durationFogMs;
-    } else {
-      colorFraction = (durationFogMs-ellapseFogTimeMs[0])/ durationFogMs;
-    }
     pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = color(0, 100* colorFraction, 100 * colorFraction);
-    drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
+
+    // draw fog pixels seperately
+    //drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
 
+
 // clock function
 void updateEllapseFogTime() {
-  for (int i = 0; i < numFogMachines; i++) {
-    if (ellapseFogTimeMsStartTime[i] == 0) {
-      ellapseFogTimeMsStartTime[i] = millis();
-      ellapseFogTimeMs[i] = 0;
-    } else {
-      ellapseFogTimeMs[i] = millis() - ellapseFogTimeMsStartTime[i];
-    }
+  if (ellapseFogTimeMsStartTime == 0) {
+    ellapseFogTimeMsStartTime = millis();
+    ellapseFogTimeMs = 0;
+  } else {
+    ellapseFogTimeMs = millis() - ellapseFogTimeMsStartTime;
   }
 }
+
+
 
 // space imagepixels to pixelbuffer
 int getPixelRow(int imageRow) {
@@ -358,6 +377,7 @@ int getPixelRow(int imageRow) {
   int towerRow = imageRow%numStripsInTower;
   return towerNumber*pixelRowsInTower + towerRow;
 }
+
 
 // Draw image to screen;
 void drawImageToScreen() {
@@ -370,13 +390,21 @@ void drawImageToScreen() {
     image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
     popMatrix();
   }
+  
+  // blackout screen where image scrolls;
+  fill(0);
+  rect(0, imageHeight+1, imageWidth, 270-imageHeight);
+  
 }
+
 
 int imageBrightness(int index) {
   return (frameCount + index*20)% 255;
 }
 
 
+
+// @deprecated
 // scroll through an image from top to bottom
 void updatePixelBufferFromImage() {
   int speed = frameCount/3;
