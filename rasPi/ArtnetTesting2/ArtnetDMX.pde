@@ -17,11 +17,11 @@ public class ArtnetDMX {
       }
       // split into 4 towers
       
-      artnet.unicastDmx(ipAddressList[getTowerNumber(j)], 0, j, dmxData);
-      println("dmx", j, getTowerNumber(j), ipAddressList[getTowerNumber(j)]);
+      artnet.unicastDmx(ipAddressList[getTowerNumber(j)], 0, j%14, dmxData);
+      //println("dmx", j, getTowerNumber(j), ipAddressList[getTowerNumber(j)]);
       //artnet.unicastDmx("10.10.10.11", 0, j, dmxData);
       long start = System.nanoTime();
-      while (System.nanoTime()-start < 500000);
+      while (System.nanoTime()-start < 300000);
       // to broad cast data
       //artnet.broadcastDmx(0, 0, dmxData);
     }
