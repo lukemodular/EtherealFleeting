@@ -358,7 +358,7 @@ void updateFogPixels(boolean poof) {
 void updateFloodPixels(boolean flood) {
   for (int tower = 0; tower < numTowers; tower++) {
     int colorFraction = flood ? 1 : 0;
-    color floodPixelColor = color(100 * colorFraction, 100* colorFraction, 100 * colorFraction);
+    color floodPixelColor = color(120 * colorFraction, 100* colorFraction, 100 * colorFraction);
     pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower+1] = floodPixelColor;
     //println("poof?" + poof);
     // draw fog pixels seperately
