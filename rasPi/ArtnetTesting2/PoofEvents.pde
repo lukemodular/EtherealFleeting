@@ -83,6 +83,7 @@ public class PoofEvents {
   void resetPoofCount() {
     poofs = 0;
     poofNotCounted = true;
+    poofCount = getNewPoofCount();
   }
 
 
@@ -126,9 +127,6 @@ public class PoofEvents {
   int getNewPoofCount() {
     return (int)random(poofCountMin, poofCountMax);
   }
-
-
-
 
   ///////
   // TIMERS
