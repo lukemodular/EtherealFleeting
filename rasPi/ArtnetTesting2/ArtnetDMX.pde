@@ -29,7 +29,7 @@ public class ArtnetDMX {
 
   void sendArtnet(byte[][] dmxData, int numUniverse) {
     for (int j = 0; j < numUniverse; j++) {
-      //artnet.unicastDmx(ipAddressList[getTowerNumber(j)], 0, j%14, dmxData[j]);
+      artnet.unicastDmx(ipAddressList[getTowerNumber(j)], 0, j%14, dmxData[j]);
       //println("dmx", j, getTowerNumber(j), ipAddressList[getTowerNumber(j)]);
       waitNanoseconds(300000);
     }
