@@ -42,12 +42,7 @@ int numLedChannels = 450;
 byte[][] dmxData = new byte[numPixelUniverse][numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
 color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
-//int numFogChannels = 12; // 4 towers, only use red values
-//int numFogUniverse = numLedUniverse + 1;
 int numFloodChannels = 21; // 7 msg x 3 channels
-//ArtnetDMX FogArtnetclass = new ArtnetDMX();
-//color[][] fogPixelBuffer = new color[numFogChannels/3][numFogUniverse];
-//byte[] dmxFogData = new byte[numFogChannels];
 
 //___________________________
 // setup pixelbuffer
@@ -87,16 +82,11 @@ float durationMs = 3000;
 boolean direction = true; 
 boolean directionFog = true; 
 
-int numFogMachines = 4;
-
-long ellapseFogTimeMs;
-long ellapseFogTimeMsStartTime;
-
-long ellapseFogEventTimeMs;
-long ellapseFogEventTimeMsStartTime;
-
-float durationFogMs = 5000;
-float durationFogEventMs = 5000;
+//___________________________
+// setup Fog timer
+PoofEvents poofEvent = new PoofEvents();
+boolean poof = false;
+color poofColor = color(0, 0, 0);
 
 //___________________________
 // setup read image
@@ -180,7 +170,8 @@ void draw()
   loadPixels();
 
   // fog pattern and draw
-  updateFogPixels();
+  poof = poofEvent.updatePoofEvent();  
+  updateFogPixels(poof);
 
   // read pattern from screen draw
   if (readFromScreen == true) {
@@ -191,8 +182,6 @@ void draw()
   LedArtnetclass.sendArtnet(dmxData, numPixelUniverse);
 
   updateEllapseTime();
-
-  updateEllapseFogTime();
 
   drawPixelBuffer();
 
@@ -341,71 +330,25 @@ void readAnemometer() {
 }
 
 
-void updateFogPixels() {
-  
-  // update timers
-  
-  // start event if times up
-  
-  //// start an event timer
-  
-  //// store poof remaining
-  
-  ////// for each poof 
-  ////// calc poof time
-  ////// start poof timer
-  
-  
-  // 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  reverseFogDirection();
-  
-  float colorFraction;
-  if (directionFog) {
-    colorFraction = ellapseFogTimeMs/ durationFogMs;
-  } else {
-    colorFraction = (durationFogMs-ellapseFogTimeMs)/ durationFogMs;
-  }
+void updateFogPixels(boolean poof) {
+  //if (directionFog) {
+  //  colorFraction = ellapseFogTimeMs/ durationFogMs;
+  //} else {
+  //  colorFraction = (durationFogMs-ellapseFogTimeMs)/ durationFogMs;
+  //}
 
   for (int tower = 0; tower < numTowers; tower++) {
-    colorFraction = 1;
-    pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = color(0, 100* colorFraction, 100 * colorFraction);
-
+    int colorFraction = poof ? 1 : 0;
+    color fogPixelColor = color(0, 100* colorFraction, 100 * colorFraction);
+    pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = fogPixelColor;
+    //println("poof?" + poof);
+    poofColor = poof ? color(0, 100, 100) : 0;
     // draw fog pixels seperately
+    fill(fogPixelColor);
+    rect(pixelBSize * numLedChannels*2/3 + 100, YDrawOffset + 10, 100, 100);
     //drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
-
-// fog clock function singe event
-void updateEllapseFogTime() {
-  if (ellapseFogTimeMsStartTime == 0) {
-    ellapseFogTimeMsStartTime = millis();
-    ellapseFogTimeMs = 0;
-  } else {
-    ellapseFogTimeMs = millis() - ellapseFogTimeMsStartTime;
-  }
-}
-
-
-// fog clock function event handling
-void updateEllapseFogTimeEvent() {
-  if (ellapseFogEventTimeMsStartTime == 0) {
-    ellapseFogEventTimeMsStartTime = millis();
-    ellapseFogEventTimeMs = 0;
-  } else {
-    ellapseFogEventTimeMs = millis() - ellapseFogEventTimeMsStartTime;
-  }
-}
-
 
 // space imagepixels to pixelbuffer
 int getPixelRow(int imageRow) {
@@ -466,10 +409,10 @@ void updatePixelBufferFromImage() {
   }
 }
 
-
+/*
 void reverseFogDirection() {
-  if (ellapseFogTimeMs > durationFogMs) {
-    directionFog = !directionFog;    
-    ellapseFogTimeMsStartTime = 0;
-  }
-}
+ if (ellapseFogTimeMs > durationFogMs) {
+ directionFog = !directionFog;    
+ ellapseFogTimeMsStartTime = 0;
+ }
+ }*/

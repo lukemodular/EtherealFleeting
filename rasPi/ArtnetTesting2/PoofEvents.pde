@@ -1,170 +1,163 @@
-int poofEventDurationMin = 1000;  //1000
-int poofEventDurationMax = 3000;  //30000
+public class PoofEvents { 
+
+  public int poofEventDurationMin = 1000;  //1000
+  public int poofEventDurationMax = 3000;  //30000
+
+  public boolean poof = false;
+
+  public int poofBetweenMin = 1500;
+  public int poofBetweenMax = 2500;
+
+  public int poofDurationMin = 500;
+  public int poofDurationMax = 1500;
+
+  public int poofCountMin = 1;
+  public int poofCountMax = 10;
+
+  static final int POOF_DURATION = 0;
+  static final int POOF_EVENT_DURATION = 1;
+  static final int FOG_EVENT_DURATION = 2;
+
+  long[] ellapseTimeMs = new long[3];
+  long[] ellapseTimeMsStartTime = new long[3];
+
+  int poofCount = 3;
+  int poofs = 0;
+  boolean poofNotCounted = true;
+
+  int poofDuration = 2000;
+  int poofEventDuration = 1000;
+  int fogEventDuration = 10000; // 5min
+
+  boolean updatePoofEvent() {
+
+    //background(poof ? 255 : 0);
+    
+    // check if we are in a poof
+    if (getPoofEllapseTime() > poofDuration) {
+      disablePoof();
+    } else {
+      enablePoof();
+    }
 
 
-boolean poof = false;
+    // check if there are more poofs in this fog event
+    if (poofs < poofCount) {
 
-int poofBetweenMin = 1500;
-int poofBetweenMax = 2500;
-
-int poofDurationMin = 500;
-int poofDurationMax = 1500;
-
-int poofCountMin = 1;
-int poofCountMax = 10;
+      // start the next poof?
+      if (getPoofEllapseTime() > poofEventDuration) {
+        resetPoofEvent();
+      }
+    }
 
 
-static final int POOF_DURATION = 0;
-static final int POOF_EVENT_DURATION = 1;
-static final int FOG_EVENT_DURATION = 2;
+    // start the next fog event (reset poof counts)
+    if (getFogEventEllapseTime() > fogEventDuration ) {
+      resetFogEvent();
+    }
 
 
-long[] ellapseTimeMs = new long[3];
-long[] ellapseTimeMsStartTime = new long[3];
 
-int poofCount = 3;
+    println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
 
-int poofs = 0;
-boolean poofNotCounted = true;
-
-int poofDuration = 2000;
-int poofEventDuration = 1000;
-int fogEventDuration = 20000; // 5min
-
-
-void setup () {
-
-  size(200, 200);
-}
-
-
-void update() {
-
-  //background(poof ? 255 : 0);
-
-
-  // check if we are in a poof
-  if (getPoofEllapseTime() > poofDuration) {
-    disablePoof();
-  } else {
-    enablePoof();
+    updatePoofTimers();
+    
+    return poof;
   }
 
 
-  // check if there are more poofs in this fog event
-  if (poofs < poofCount) {
-
-    // start the next poof?
-    if (getPoofEllapseTime() > poofEventDuration) {
-      resetPoofEvent();
+  void enablePoof() {
+    poof = true;
+    if (poofNotCounted) { 
+      poofs++; 
+      poofNotCounted = false;
     }
   }
 
+  void disablePoof() {
+    poof = false;
+    poofNotCounted = true;
+  }
 
-  // start the next fog event (reset poof counts)
-  if (getFogEventEllapseTime() > fogEventDuration ) {
-    resetFogEvent();
+
+  void resetPoofCount() {
+    poofs = 0;
+    poofNotCounted = true;
   }
 
 
 
-  println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
 
-  updatePoofTimers();
-}
+  ////////
+  // RESET EVENTS
 
-
-void enablePoof() {
-  poof = true;
-  if (poofNotCounted) { 
-    poofs++; 
-    poofNotCounted = false;
+  void resetPoofEvent() {
+    resetPoofTime(POOF_DURATION);
+    poofDuration = getNewPoofDuration();
+    poofEventDuration = getNewPoofEventDuration();
   }
-}
 
-void disablePoof() {
-  poof = false;
-  poofNotCounted = true;
-}
+  void resetFogEvent() {
+    resetPoofTime(FOG_EVENT_DURATION);
+    resetPoofCount();
+  }
 
-
-void resetPoofCount() {
-  poofs = 0;
-  poofNotCounted = true;
-}
+  void resetPoofTime(int timer) {
+    ellapseTimeMsStartTime[timer] = 0;
+  }
 
 
 
+  //////
+  // RANDOM 
 
-////////
-// RESET EVENTS
+  int getNewPoofEventDuration() {
+    return (int)random(poofEventDurationMin, poofEventDurationMax);
+  }
 
-void resetPoofEvent() {
-  resetPoofTime(POOF_DURATION);
-  poofDuration = getNewPoofDuration();
-  poofEventDuration = getNewPoofEventDuration();
-}
+  int getNewBetweenDuration() {
+    return (int)random(poofBetweenMin, poofBetweenMax);
+  }
 
-void resetFogEvent() {
-  resetPoofTime(FOG_EVENT_DURATION);
-  resetPoofCount();
-}
+  int getNewPoofDuration() {
+    return (int)random(poofDurationMin, poofDurationMax);
+  }
 
-void resetPoofTime(int timer) {
-  ellapseTimeMsStartTime[timer] = 0;
-}
-
-
-
-//////
-// RANDOM 
-
-int getNewPoofEventDuration() {
-  return (int)random(poofEventDurationMin, poofEventDurationMax);
-}
-
-int getNewBetweenDuration() {
-  return (int)random(poofBetweenMin, poofBetweenMax);
-}
-
-int getNewPoofDuration() {
-  return (int)random(poofDurationMin, poofDurationMax);
-}
-
-int getNewPoofCount() {
-  return (int)random(poofCountMin, poofCountMax);
-}
+  int getNewPoofCount() {
+    return (int)random(poofCountMin, poofCountMax);
+  }
 
 
 
 
-///////
-// TIMERS
+  ///////
+  // TIMERS
 
-long getPoofEllapseTime() {
-  return getEventTime(POOF_DURATION);
-}
+  long getPoofEllapseTime() {
+    return getEventTime(POOF_DURATION);
+  }
 
-long getPoofEventEllapseTime() {
-  return getEventTime(POOF_EVENT_DURATION);
-}
+  long getPoofEventEllapseTime() {
+    return getEventTime(POOF_EVENT_DURATION);
+  }
 
-long getFogEventEllapseTime() {
-  return getEventTime(FOG_EVENT_DURATION);
-}
+  long getFogEventEllapseTime() {
+    return getEventTime(FOG_EVENT_DURATION);
+  }
 
-long getEventTime(int timer) {
-  return ellapseTimeMs[timer];
-}
+  long getEventTime(int timer) {
+    return ellapseTimeMs[timer];
+  }
 
-// clock function
-void updatePoofTimers() {
-  for (int j = 0; j < ellapseTimeMs.length; j++) {
-    if (ellapseTimeMsStartTime[j] == 0) {
-      ellapseTimeMsStartTime[j] = millis();
-      ellapseTimeMs[j] = 0;
-    } else {
-      ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
+  // clock function
+  void updatePoofTimers() {
+    for (int j = 0; j < ellapseTimeMs.length; j++) {
+      if (ellapseTimeMsStartTime[j] == 0) {
+        ellapseTimeMsStartTime[j] = millis();
+        ellapseTimeMs[j] = 0;
+      } else {
+        ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
+      }
     }
   }
 }
