@@ -1,18 +1,18 @@
 public class PoofEvents { 
 
-  public int poofEventDurationMin = 1000;  //1000
-  public int poofEventDurationMax = 3000;  //30000
+  public int poofEventDurationMin = 1000;  
+  public int poofEventDurationMax = 30000;  
 
   public boolean poof = false;
 
-  public int poofBetweenMin = 1500;
-  public int poofBetweenMax = 2500;
+  public int poofBetweenMin = 5000;
+  public int poofBetweenMax = 10000;
 
   public int poofDurationMin = 500;
-  public int poofDurationMax = 1500;
+  public int poofDurationMax = 1000;
 
   public int poofCountMin = 1;
-  public int poofCountMax = 10;
+  public int poofCountMax = 5;
 
   static final int POOF_DURATION = 0;
   static final int POOF_EVENT_DURATION = 1;
@@ -27,12 +27,12 @@ public class PoofEvents {
 
   int poofDuration = 2000;
   int poofEventDuration = 1000;
-  int fogEventDuration = 10000; // 5min
+  int fogEventDuration = 1000 * 60 * 5; // 5min
 
   boolean updatePoofEvent() {
 
     //background(poof ? 255 : 0);
-    
+
     // check if we are in a poof
     if (getPoofEllapseTime() > poofDuration) {
       disablePoof();
@@ -58,10 +58,15 @@ public class PoofEvents {
 
 
 
-    println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
+    println(
+      getPoofEllapseTime() + "ms ellapse " + 
+      poofs + " " +
+      poofDuration + "ms poof duration " +
+      poofEventDuration/1000+ "s between poof " +
+      poofCount+ " poof count "); 
 
     updatePoofTimers();
-    
+
     return poof;
   }
 
