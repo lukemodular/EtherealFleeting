@@ -179,8 +179,6 @@ void draw()
 
   loadPixels();
 
-
-
   // fog pattern and draw
   updateFogPixels();
 
@@ -193,10 +191,7 @@ void draw()
   LedArtnetclass.sendArtnet(dmxData, numPixelUniverse);
 
   updateEllapseTime();
-  if (ellapseFogTimeMs > durationFogMs) {
-    directionFog = !directionFog;    
-    ellapseFogTimeMsStartTime = 0;
-  }
+
   updateEllapseFogTime();
 
   drawPixelBuffer();
@@ -347,6 +342,33 @@ void readAnemometer() {
 
 
 void updateFogPixels() {
+  
+  // update timers
+  
+  // start event if times up
+  
+  //// start an event timer
+  
+  //// store poof remaining
+  
+  ////// for each poof 
+  ////// calc poof time
+  ////// start poof timer
+  
+  
+  // 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  reverseFogDirection();
+  
   float colorFraction;
   if (directionFog) {
     colorFraction = ellapseFogTimeMs/ durationFogMs;
@@ -373,17 +395,17 @@ void updateEllapseFogTime() {
   }
 }
 
+
 // fog clock function event handling
 void updateEllapseFogTimeEvent() {
-  for (int i = 0; i < numFogMachines; i++) {
-    if (ellapseFogEventTimeMsStartTime == 0) {
-      ellapseFogEventTimeMsStartTime = millis();
-      ellapseFogEventTimeMs = 0;
-    } else {
-      ellapseFogEventTimeMs = millis() - ellapseFogEventTimeMsStartTime;
-    }
+  if (ellapseFogEventTimeMsStartTime == 0) {
+    ellapseFogEventTimeMsStartTime = millis();
+    ellapseFogEventTimeMs = 0;
+  } else {
+    ellapseFogEventTimeMs = millis() - ellapseFogEventTimeMsStartTime;
   }
 }
+
 
 // space imagepixels to pixelbuffer
 int getPixelRow(int imageRow) {
@@ -441,5 +463,13 @@ void updatePixelBufferFromImage() {
       pixelBuffer[i][getPixelRow(j)] = texture.pixels[pixelPosition];
       drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
+  }
+}
+
+
+void reverseFogDirection() {
+  if (ellapseFogTimeMs > durationFogMs) {
+    directionFog = !directionFog;    
+    ellapseFogTimeMsStartTime = 0;
   }
 }
