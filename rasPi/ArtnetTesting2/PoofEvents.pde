@@ -22,7 +22,6 @@ public class PoofEvents {
   public int floodAddMin = 2000;
   public int floodAddMax = 5000; 
 
-
   static final int POOF_DURATION = 0;
   static final int POOF_EVENT_DURATION = 1;
   static final int FOG_EVENT_DURATION = 2;
@@ -38,15 +37,18 @@ public class PoofEvents {
   int poofEventDuration = 1000;
 
   int totalPoofsDuration = 0;
-  int fogEventDuration = 15000; // 5min
+
   int preFogEventDuration = 3000; // variable
-  int floodResetDuration = fogEventDuration - preFogEventDuration;
+
   int floodEventDuration = 5000; // calculate fog duration length and add random
   int additionalFloodTime = 2000;
   boolean gotNewDuration = false;
 
-  int fogEventDuration = 1000 * 60 * 5; // 5min
-
+  // int fogEventDuration = 15000; // 5min
+  int fogEventDuration = 1000 * 60 * 1; // 5min
+  int floodResetDuration = fogEventDuration - preFogEventDuration;
+  boolean gotChance;
+  float chance = 1;
 
   boolean updatePoofEvent() {
 
@@ -77,35 +79,40 @@ public class PoofEvents {
     //println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
     updatePoofTimers();
 
-
-    println(
-      getPoofEllapseTime() + "ms ellapse " + 
-      poofs + " " +
-      poofDuration + "ms poof duration " +
-      poofEventDuration/1000+ "s between poof " +
-      poofCount+ " poof count "); 
-
     updatePoofTimers();
 
     return poof;
   }
 
   boolean updateFloodEvent() {
-
-    // floodlight timer
-    if (!gotNewDuration && poofs == poofCount) { // if not recalculated and poofing has stopped
+    
+    //println("chance "+chance);
+    // println(poofCount+ " poof count ", +poofs+" ");
+    // floodlight timer, if not recalculated and poofing has stopped
+    if (!gotNewDuration && poofs == poofCount) { 
       // get new floodlight duration: stop after total poof times and a new random
 
       additionalFloodTime = getNewAddFloodDuration();
-      floodEventDuration = additionalFloodTime + totalPoofsDuration ;
+      floodEventDuration = additionalFloodTime + (int)getFogEventEllapseTime() ;// get the time at last poof ;
 
+      // get new flood reset time
       preFogEventDuration = getNewPreFogEventDuration();
       floodResetDuration = fogEventDuration - preFogEventDuration;
+
       gotNewDuration = true;
-      println("poof duration"+totalPoofsDuration+" "+additionalFloodTime + " "+preFogEventDuration);
+      println("additional flood time "+additionalFloodTime + " t- flood start "+preFogEventDuration );
+      //println(poofCount+ " poof count "++ " "+getFogEventEllapseTime() );
+
+      // determine in floods come on
+      if (!gotChance) {
+        chance = getRandomFloodChance();
+        print("random "+ chance);
+        gotChance = true;
+      }
     }
 
-    if (getFogEventEllapseTime() > floodEventDuration){
+    // check that new poof counts has updated and new flood event duation has calculated
+    if (getFogEventEllapseTime() > floodEventDuration && poofs == poofCount) { 
       //println("floodevent"+floodEventDuration);
       resetFloodEvent();  // turm flood off, get new time for when to start again
     }
@@ -126,6 +133,15 @@ public class PoofEvents {
       poofs++; 
       totalPoofsDuration += poofEventDuration;
       poofNotCounted = false;
+
+      // logging next poof stats
+
+      println(
+        getPoofEllapseTime() + "ms ellapse " + 
+        poofs + " " +
+        poofDuration + "ms poof duration " +
+        poofEventDuration/1000+ "s between poof " +
+        poofCount+ " poof count ");
     }
   }
 
@@ -147,13 +163,16 @@ public class PoofEvents {
     resetPoofTime(POOF_DURATION);
     poofDuration = getNewPoofDuration();
     poofEventDuration = getNewPoofEventDuration();
-    totalPoofsDuration = 0;
   }
 
   void resetFogEvent() {
     resetPoofTime(FOG_EVENT_DURATION);
     resetPoofCount();
     gotNewDuration = false;
+    
+    
+    totalPoofsDuration = 0;
+    gotChance = false;
   }
 
   // reset 1 of the 3 event timers
@@ -162,14 +181,15 @@ public class PoofEvents {
   }
 
   void resetFloodEvent() {
-    flood = false;
+    if (flood) flood = false;
   }
 
   void floodEvent() {
-    flood = true;
+    
+    if (chance > .35 && !flood) 
+      //print("flooding "+chance);
+      flood = true;
   }
-
-
 
   //////
   // RANDOM 
@@ -196,6 +216,10 @@ public class PoofEvents {
 
   int getNewAddFloodDuration() {
     return (int)random(floodAddMin, floodAddMax);
+  }
+
+  float getRandomFloodChance() {
+    return (float)random(1);
   }
   ///////
   // TIMERS

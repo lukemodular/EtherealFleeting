@@ -166,7 +166,7 @@ void draw()
     //image(texture, width*2/3, 200);
   }
 
-  drawImageToScreen();
+  //drawImageToScreen();
 
   loadPixels();
 
@@ -190,8 +190,6 @@ void draw()
 
   //println(frameRate);
 }  // end draw()
-
-
 
 // clock function
 void updateEllapseTime() {
