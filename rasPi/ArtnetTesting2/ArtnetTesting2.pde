@@ -87,6 +87,7 @@ boolean directionFog = true;
 PoofEvents poofEvent = new PoofEvents();
 boolean poof = false;
 color poofColor = color(0, 0, 0);
+boolean flood = false;
 
 //___________________________
 // setup read image
@@ -171,7 +172,9 @@ void draw()
 
   // fog pattern and draw
   poof = poofEvent.updatePoofEvent();  
+  flood = poofEvent.updateFloodEvent();
   updateFogPixels(poof);
+  updateFloodPixels(flood);
 
   // read pattern from screen draw
   if (readFromScreen == true) {
@@ -185,7 +188,7 @@ void draw()
 
   drawPixelBuffer();
 
-  println(frameRate);
+  //println(frameRate);
 }  // end draw()
 
 
@@ -342,10 +345,23 @@ void updateFogPixels(boolean poof) {
     color fogPixelColor = color(0, 100* colorFraction, 100 * colorFraction);
     pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower] = fogPixelColor;
     //println("poof?" + poof);
-    poofColor = poof ? color(0, 100, 100) : 0;
+    //poofColor = poof ? color(0, 100, 100) : 0;
     // draw fog pixels seperately
     fill(fogPixelColor);
     rect(pixelBSize * numLedChannels*2/3 + 100, YDrawOffset + 10, 100, 100);
+    //drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
+  }
+}
+
+void updateFloodPixels(boolean flood){
+  for (int tower = 0; tower < numTowers; tower++) {
+    int colorFraction = flood ? 1 : 0;
+    color floodPixelColor = color(100 * colorFraction, 100* colorFraction, 100 * colorFraction);
+    pixelBuffer[0][tower*pixelRowsInTower+numStripsInTower+1] = floodPixelColor;
+    //println("poof?" + poof);
+    // draw fog pixels seperately
+    fill(floodPixelColor);
+    rect(pixelBSize * numLedChannels*2/3 + 200, YDrawOffset + 10, 100, 100);
     //drawPixelBuffer(0, tower*pixelRowsInTower+numStripsInTower, pixelBuffer);
   }
 }
