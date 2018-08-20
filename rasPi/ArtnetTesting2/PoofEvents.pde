@@ -1,16 +1,16 @@
 public class PoofEvents { 
 
-  public int poofEventDurationMin = 1000;  //1000
-  public int poofEventDurationMax = 3000;  //30000
+  public int poofEventDurationMin = 1000;  
+  public int poofEventDurationMax = 30000;  
 
   public boolean poof = false;
   public boolean flood = false;
 
-  public int poofBetweenMin = 1500;
-  public int poofBetweenMax = 2500;
+  public int poofBetweenMin = 5000;
+  public int poofBetweenMax = 10000;
 
   public int poofDurationMin = 500;
-  public int poofDurationMax = 1500;
+  public int poofDurationMax = 1000;
 
   public int poofCountMin = 1;
   public int poofCountMax = 5;
@@ -21,6 +21,7 @@ public class PoofEvents {
   // after all poofs stopped, how much longer to leave floodlights on
   public int floodAddMin = 2000;
   public int floodAddMax = 5000; 
+
 
   static final int POOF_DURATION = 0;
   static final int POOF_EVENT_DURATION = 1;
@@ -35,6 +36,7 @@ public class PoofEvents {
 
   int poofDuration = 2000;
   int poofEventDuration = 1000;
+
   int totalPoofsDuration = 0;
   int fogEventDuration = 15000; // 5min
   int preFogEventDuration = 3000; // variable
@@ -42,6 +44,9 @@ public class PoofEvents {
   int floodEventDuration = 5000; // calculate fog duration length and add random
   int additionalFloodTime = 2000;
   boolean gotNewDuration = false;
+
+  int fogEventDuration = 1000 * 60 * 5; // 5min
+
 
   boolean updatePoofEvent() {
 
@@ -68,12 +73,20 @@ public class PoofEvents {
       resetFogEvent();
     }
 
+
     //println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
     updatePoofTimers();
 
-    if (poofs == poofCount) {
-      //  println("not poofing");
-    }
+
+    println(
+      getPoofEllapseTime() + "ms ellapse " + 
+      poofs + " " +
+      poofDuration + "ms poof duration " +
+      poofEventDuration/1000+ "s between poof " +
+      poofCount+ " poof count "); 
+
+    updatePoofTimers();
+
     return poof;
   }
 

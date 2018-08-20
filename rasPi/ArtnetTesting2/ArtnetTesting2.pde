@@ -136,7 +136,7 @@ void setup()
   texture.updatePixels();
 
   for (int i = 0; i < images.length; i++) {
-    images[i] = loadImage("cloud" + i + ".jpg");
+    images[i] = loadImage("cloud" + (i+11) + ".jpg");
   }
 }
 
@@ -377,11 +377,11 @@ int getPixelRow(int imageRow) {
 // Draw image to screen;
 void drawImageToScreen() {
   for (int i = 0; i <images.length; i++) {
-    tint(255, imageBrightness(i));
+    //tint(255, imageBrightness(i));
     int verticalPos = imageHeight - frameCount % imageHeight;
     image(images[i], imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
     pushMatrix();
-    //scale(1.0, -1.0);
+    scale(1.0, -1.0);
     image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
     popMatrix();
   }
