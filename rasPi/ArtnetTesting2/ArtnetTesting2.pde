@@ -72,7 +72,7 @@ float windSpeedCal;
 int numLeds = 300;
 int numStrands = 24;
 color led[][];
-int size = 6;
+int size = 2;
 
 //___________________________
 // setup timer
@@ -96,10 +96,13 @@ int ledPixels = 170;
 color[][] imageLed = new color[numLedChannels/3][numLedUniverse];
 int imageStartX = 0;
 int imageStartY = 0;
-int imageWidth = 1800;
-int imageHeight = 24*6;
-int maxImages = 1; // total # of images
+int imageWidth = 300* size;
+int imageHeight = 24*size;
+
+
 // Declaring an array of images
+int defaultImageIndex = 11;
+int maxImages = 12; // total # of images
 PImage[] images = new PImage[maxImages];
 
 
@@ -135,8 +138,9 @@ void setup()
   texture.loadPixels();
   texture.updatePixels();
 
+  // preload images
   for (int i = 0; i < images.length; i++) {
-    images[i] = loadImage("cloud" + (i+11) + ".jpg");
+    images[i] = loadImage("cloud" + i + ".jpg");
   }
 }
 
@@ -353,7 +357,7 @@ void updateFogPixels(boolean poof) {
   }
 }
 
-void updateFloodPixels(boolean flood){
+void updateFloodPixels(boolean flood) {
   for (int tower = 0; tower < numTowers; tower++) {
     int colorFraction = flood ? 1 : 0;
     color floodPixelColor = color(100 * colorFraction, 100* colorFraction, 100 * colorFraction);
@@ -376,17 +380,42 @@ int getPixelRow(int imageRow) {
 
 // Draw image to screen;
 void drawImageToScreen() {
-  for (int i = 0; i <images.length; i++) {
-    //tint(255, imageBrightness(i));
-    int verticalPos = imageHeight - frameCount % imageHeight;
-    image(images[i], imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
-    pushMatrix();
-    scale(1.0, -1.0);
-    image(images[i], imageStartX, imageStartY - verticalPos - imageHeight, imageWidth, imageHeight);
-    popMatrix();
-  }
 
-  // blackout screen where image scrolls;
+  int currentImageIndex = defaultImageIndex;
+  
+  // UNCOMMENT to cycle images
+  //currentImageIndex = (defaultImageIndex + millis() / (1000*10)) % maxImages;
+
+  PImage displayImage = images[currentImageIndex];
+  
+  // use current image height
+  int displayImageHeight = displayImage.height;
+  //imageWidth = displayImage.width;
+
+  // create a scrolling effect by changing the vertical position
+  int verticalPos = (millis()/100) % displayImageHeight;
+  
+  // UNCOMMENT to test using the mouseX position for troubleshooting
+  //int verticalPos = (mouseX/10) % displayImageHeight;
+
+  // fade in 
+  //tint(255, imageBrightness(0));
+
+  // draw image at vertical position
+  image(displayImage, imageStartX, imageStartY + verticalPos, imageWidth, displayImageHeight);
+  
+  //draw image an image height behind the vertical position
+  image(displayImage, imageStartX, imageStartY + verticalPos - displayImageHeight, imageWidth, displayImageHeight);
+
+  // flips the second image
+  // pushMatrix();
+  // scale(1.0, -1.0);
+  //image(displayImage, imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
+  //popMatrix();
+  
+  //println(millis() +" " + verticalPos);
+  
+  // blackout screen where image is not used for painting pixels;
   fill(0);
   rect(0, imageHeight+1, imageWidth, 270-imageHeight);
 }
