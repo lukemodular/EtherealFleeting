@@ -15,9 +15,9 @@ boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
-//Pattern defaultPattern = new SingleTrace();
-//Pattern defaultPattern = new SingleTrace();
-Pattern defaultPattern = new TraceDown();
+// pick a pattern (todo: flip between patterns with some logic)
+//Pattern defaultPattern = new TraceDown();
+Pattern defaultPattern = new SingleTrace();
 
 
 //___________________________
