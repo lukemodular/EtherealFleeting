@@ -1,6 +1,7 @@
-// Building the brain for the cloud
+// Building the brain for EtherealFleeting 
+// by @adellelin @lukemodular @mpinner and @sophi
 // artnet based on Artnet for Java and Processing
-// patterns based on LED jacket patterns
+// patterns based on DMXLedJacketPatterns in https://github.com/adellelin/ChatStar
 
 // to run from command-line 
 // processing-java --sketch="/home/pi/Documents/git/EtherealFleeting/rasPi/ArtnetTesting/" --run
@@ -162,7 +163,7 @@ void draw()
 
   // read pattern from screen draw
   if (readFromScreen == true) {
-    updatePixelBufferFromPattern();
+    updatePixelBufferFromScreen();
   } 
 
   LedArtnetclass.updateArtnet(artnet, dmxData, pixelBuffer, numPixelUniverse, numLedChannels);
@@ -190,7 +191,7 @@ void updateEllapseTime() {
 
 
 // storing pixels from screen
-void updatePixelBufferFromPattern() {
+void updatePixelBufferFromScreen() {
 
   for (int i = 0; i < numLedChannels/3; i++) { 
 
@@ -359,7 +360,6 @@ void drawImageToScreen() {
   //  int verticalPos = (millis()/100) % displayImageHeight;
   int verticalPos = (millis()/60) % displayImageHeight;
 
-
   // UNCOMMENT to test using the mouseX position for troubleshooting
   //int verticalPos = (mouseX/10) % displayImageHeight;
 
@@ -377,8 +377,6 @@ void drawImageToScreen() {
   // scale(1.0, -1.0);
   //image(displayImage, imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
   //popMatrix();
-
-  //println(millis() +" " + verticalPos);
 
   // blackout screen where image is not used for painting pixels;
   fill(0);
