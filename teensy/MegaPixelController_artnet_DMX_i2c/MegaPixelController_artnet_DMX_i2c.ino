@@ -68,18 +68,18 @@ short select_universe = ((SubnetID * 16) + UniverseID);
 
 // Set a different MAC address for each controller IMPORTANT!!!! you can change the last value but make sure its HEX!...
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x14 };
-byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x15 };
+//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x15 };
 //byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x16 };
-//byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x17 };
+byte mac[] = { 0x74, 0x69, 0x69, 0x2D, 0x30, 0x17 };
 
 
 // Uncomment if you want to use static IP
 //*******************************************************
 // ethernet interface ip address
 //IPAddress ip(10, 10, 10, 11);  //IP address of ethernet shield
-IPAddress ip(10, 10, 10, 12);  //IP address of ethernet shield
+//IPAddress ip(10, 10, 10, 12);  //IP address of ethernet shield
 //IPAddress ip(10, 10, 10, 13);  //IP address of ethernet shield
-//IPAddress ip(10, 10, 10, 14);  //IP address of ethernet shield
+IPAddress ip(10, 10, 10, 14);  //IP address of ethernet shield
 //*******************************************************
 
 // E1.31 and artenet is UDP.  One socket library will only allow one protocol to be defined.
@@ -91,20 +91,20 @@ EthernetUDP Udp;
 #define ETHERNET_BUFFER 576 //540 is artnet leave at 636 for e1.31
 /// Change Values and needed.
 
-#define NUM_STRIPS 6
-#define NUM_LEDS_PER_STRIP 300
-#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
-#define UNIVERSE_COUNT 12
-#define TOTAL_UNIVERSE_COUNT 14
-#define LEDS_PER_UNIVERSE 150
-
 //#define NUM_STRIPS 6
 //#define NUM_LEDS_PER_STRIP 300
-//#define NUM_LEDS 2100 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-//#define CHANNEL_COUNT 6300 //because it divides by 3 nicely
-//#define UNIVERSE_COUNT 14
+//#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+//#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
+//#define UNIVERSE_COUNT 12
+//#define TOTAL_UNIVERSE_COUNT 14
 //#define LEDS_PER_UNIVERSE 150
+
+#define NUM_STRIPS 7
+#define NUM_LEDS_PER_STRIP 300
+#define NUM_LEDS 2100 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+#define CHANNEL_COUNT 6300 //because it divides by 3 nicely
+#define UNIVERSE_COUNT 13
+#define LEDS_PER_UNIVERSE 150
 
 //ARTNET PACKET
 const int art_net_header_size = 17;
@@ -339,49 +339,11 @@ void loop() {
 
   //Process packets
   int packetSize = Udp.parsePacket(); //Read UDP packet count
-  if (c > TOTAL_UNIVERSE_COUNT) {
+  if (c > UNIVERSE_COUNT) {
     c = 0;
   }
 
   if (packetSize) {
-
-    if (c == 13 || c == 14) {
-      if (c == 13) {
-        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
-        int count = checkARTHeaders(packetBuffer, packetSize);
-        if (count) {
-          //read first channel of incoming universe
-          byte fog = packetBuffer[18];
-          //Serial.println(count);
-          //Serial.println(packetSize);
-          Serial.print("Fog value: ");
-          Serial.println(fog);
-          DmxSimple.write(1, fog);
-          c = c + 1;
-          //Serial.print(c);
-          //Serial.println("fogUniverse");
-        }
-      }
-      if (c == 14) {
-        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
-        int count = checkARTHeaders(packetBuffer, packetSize);
-        if (count) {
-          //read first channel of incoming universe
-          byte flood = packetBuffer[18];
-          //Serial.println(count);
-          //Serial.println(packetSize);
-          Serial.print("Flood value: ");
-          Serial.println(flood);
-          databuf[0]=flood;
-          Wire.beginTransmission(target);   // Slave address
-          Wire.write(databuf, strlen(databuf) + 1); // Write string to I2C Tx buffer (incl. string null at end)
-          Wire.endTransmission();           // Transmit to Slave          // Transmit to Slave
-          c = c + 1;
-          //Serial.print(c);
-          //Serial.println("floodUniverse");
-        }
-      }
-    } else {
 
       Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
       //Serial.println(packetSize);
@@ -392,19 +354,30 @@ void loop() {
       //ARTNET
       int count = checkARTHeaders(packetBuffer, packetSize);
       if (count) {
-
         //Serial.println(count);
         //Serial.println(packetSize);
+        if (packetBuffer[14] == 12) {
+          byte fog = packetBuffer[18];
+          DmxSimple.write(1, fog);
+          Serial.print("fog ");
+          Serial.println(fog);
+        }
+        if (packetBuffer[14] == 13) {
+          byte flood = packetBuffer[19];
+          databuf[0] = flood;
+          Wire.beginTransmission(target);   // Slave address
+          Wire.write(databuf, strlen(databuf) + 1); // Write string to I2C Tx buffer (incl. string null at end)
+          Wire.endTransmission();           // Transmit to Slave          // Transmit to Slave
+          Serial.print("flood ");
+          Serial.println(flood);
+        }
 
-        artnetDMXReceived(packetBuffer, count, c); //process data function
 
-        c = c + 1;
-        //Serial.print(c);
-        //Serial.println("LED Universe");
+        artnetDMXReceived(packetBuffer, count, packetBuffer[14]); //process data function
+        //Serial.print("LED Universe");
+        //Serial.println(c);
+        //c = c + 1;
       }
-
-    }
-
 
   }
 

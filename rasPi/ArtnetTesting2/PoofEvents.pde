@@ -6,8 +6,9 @@ public class PoofEvents {
   public boolean poof = false;
   public boolean flood = false;
 
-  public int poofBetweenMin = 5000;
-  public int poofBetweenMax = 10000;
+  //random between fog events
+  public int poofBetweenEventMin = 60000;
+  public int poofBetweenEventMax = 90000; //not used for now
 
   public int poofDurationMin = 500;
   public int poofDurationMax = 1000;
@@ -15,12 +16,13 @@ public class PoofEvents {
   public int poofCountMin = 1;
   public int poofCountMax = 5;
 
+  //time before the first poof event
   public int preFogMin = 3000;
   public int preFogMax = 5000; // 60000
 
   // after all poofs stopped, how much longer to leave floodlights on
-  public int floodAddMin = 2000;
-  public int floodAddMax = 5000; 
+  public int floodAddMin = 5000;
+  public int floodAddMax = 10000; 
 
   static final int POOF_DURATION = 0;
   static final int POOF_EVENT_DURATION = 1;
@@ -36,7 +38,7 @@ public class PoofEvents {
   int poofDuration = 2000;
   int poofEventDuration = 1000;
 
-  int totalPoofsDuration = 0;
+  //int totalPoofsDuration = 0;
 
   public int preFogEventDuration = 3000; // variable
 
@@ -44,7 +46,7 @@ public class PoofEvents {
   int additionalFloodTime = 2000;
   boolean gotNewDuration = false;
 
-  // int fogEventDuration = 15000; // 5min
+  //time between Events
   int fogEventDuration = 1000 * 60 * 1; // 5min
   int floodResetDuration = fogEventDuration - preFogEventDuration;
   boolean gotChance;
@@ -163,7 +165,7 @@ public class PoofEvents {
     poof = true;
     if (poofNotCounted) { 
       poofs++; 
-      totalPoofsDuration += poofEventDuration;
+      //totalPoofsDuration += poofEventDuration;
       poofNotCounted = false;
 
       // logging next poof stats
@@ -207,9 +209,9 @@ public class PoofEvents {
     resetPoofCount();
     gotNewDuration = false;
 
-
-    totalPoofsDuration = 0;
+    //totalPoofsDuration = 0;
     gotChance = false;
+    fogEventDuration = getNewBetweenEventDuration();
   }
 
   // reset 1 of the 3 event timers
@@ -219,11 +221,12 @@ public class PoofEvents {
 
   void resetFloodEvent() {
     if (flood) flood = false;
+    //gotChance = false;
   }
 
   void floodEvent() {
 
-    if (chance > 0 && !flood) 
+    if (chance > .35 && !flood) 
       //print("flooding "+chance);
       flood = true;
   }
@@ -235,8 +238,8 @@ public class PoofEvents {
     return (int)random(poofEventDurationMin, poofEventDurationMax);
   }
 
-  int getNewBetweenDuration() {
-    return (int)random(poofBetweenMin, poofBetweenMax);
+  int getNewBetweenEventDuration() {
+    return (int)random(poofBetweenEventMin, poofBetweenEventMax);
   }
 
   int getNewPoofDuration() {

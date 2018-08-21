@@ -1,13 +1,10 @@
 // -------------------------------------------------------------------------------------------
-// Basic Master
+// Basic Slave
 // -------------------------------------------------------------------------------------------
 //
-// This creates a simple I2C Master device which when triggered will send/receive a text 
-// string to/from a Slave device.  It is intended to pair with a Slave device running the 
-// basic_slave sketch.
-//
-// Pull pin12 input low to send.
-// Pull pin11 input low to receive.
+// This creates a simple I2C Slave device which will print whatever text string is sent to it.
+// It will retain the text string in memory and will send it back to a Master device if
+// requested.  It is intended to pair with a Master device running the basic_master sketch.
 //
 // This example code is in the public domain.
 //
@@ -15,102 +12,125 @@
 
 #include <i2c_t3.h>
 #include <IRremote.h>
-#include <IRremoteInt.h>
+
+// Function prototypes
+void receiveEvent(size_t count);
+void requestEvent(void);
+
 // Memory
-#define MEM_LEN 256
+#define MEM_LEN 1
 char databuf[MEM_LEN];
-int count;
+volatile uint8_t received;
+
+int lastfloodState  = 0;     // previous state of the button
+int floodState      = 0;     // remember current led state
+
 IRsend irsend;
 
+//
+// Setup
+//
 void setup()
 {
-    pinMode(LED_BUILTIN,OUTPUT);    // LED
-    digitalWrite(LED_BUILTIN,LOW);  // LED off
-    pinMode(12,INPUT_PULLUP);       // Control for Send
-    pinMode(11,INPUT_PULLUP);       // Control for Receive
+  pinMode(LED_BUILTIN, OUTPUT); // LED
 
-    // Setup for Master mode, pins 18/19, external pullups, 400kHz, 200ms default timeout
-    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
-    Wire.setDefaultTimeout(200000); // 200ms
+  // Setup for Slave mode, address 0x66, pins 18/19, external pullups, 400kHz
+  Wire.begin(I2C_SLAVE, 0x66, I2C_PINS_18_19, I2C_PULLUP_EXT, 400000);
 
-    // Data init
-    memset(databuf, 0, sizeof(databuf));
-    count = 0;
+  // Data init
+  received = 0;
+  memset(databuf, 0, sizeof(databuf));
 
-    Serial.begin(115200);
+  // register events
+  Wire.onReceive(receiveEvent);
+  Wire.onRequest(requestEvent);
+
+  delay(100);
+  irsend.sendNEC(0xF740BF, 32); //OFF
+  delay(100);
+
+  Serial.begin(115200);
 }
 
 void loop()
 {
-    uint8_t target = 0x66; // target Slave address
- 
-    // Send string to Slave
-    //
-    if(digitalRead(12) == LOW)
-    {
-      digitalWrite(LED_BUILTIN,HIGH);   // LED on
-      irsend.sendNEC(0xF740BF, 32); //OFF
-      delay(5000);
-      irsend.sendNEC(0xF7C03F, 32);  //ON
-      delay(50);
-      irsend.sendNEC(0xF7E01F, 32); //White
-      delay(50);
-      irsend.sendNEC(0xF7807F, 32);  //Down
-      delay(50);
-      irsend.sendNEC(0xF7807F, 32);  //Down
-      delay(50);
-      irsend.sendNEC(0xF7807F, 32);  //Down
-      delay(50);
-      irsend.sendNEC(0xF7807F, 32);  //Down
-      delay(50);
-      irsend.sendNEC(0xF7807F, 32);  //Down
+  // print received data - this is done in main loop to keep time spent in I2C ISR to minimum
+  if (received)
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+    floodState = int(databuf[0]);
+    //Serial.print("Slave received: ");
+    //Serial.println(floodState);
 
-  delay(5000);
-        // Construct data message
-        sprintf(databuf, "Data Message #%d", count++);
-
-        // Print message
-        Serial.printf("Sending to Slave: '%s' ", databuf);
-        
-        // Transmit to Slave
-        Wire.beginTransmission(target);   // Slave address
-        Wire.write(databuf,strlen(databuf)+1); // Write string to I2C Tx buffer (incl. string null at end)
-        Wire.endTransmission();           // Transmit to Slave
-
-        // Check if error occured
-        if(Wire.getError())
-            Serial.print("FAIL\n");
-        else
-            Serial.print("OK\n");
-
-        digitalWrite(LED_BUILTIN,LOW);    // LED off
-        delay(100);                       // Delay to space out tests
+    if (floodState != lastfloodState) {
+      Serial.print("floodstate received: ");
+      Serial.println(floodState);
+      if (floodState == 255) {
+        irsend.sendNEC(0xF7C03F, 32);  //ON
+        delay(50);
+        irsend.sendNEC(0xF7C837, 32);
+        delay(50);
+        Serial.print("Floodstate ON");
+      } else {
+        irsend.sendNEC(0xF740BF, 32); //OFF
+        delay(50);
+        Serial.print("Floodstate OFF");
+      }
+      lastfloodState = floodState;
     }
+    received = 0;
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 
-    // Read string from Slave
-    //
-    if(digitalRead(11) == LOW)
-    {
-        digitalWrite(LED_BUILTIN,HIGH);   // LED on
-
-        // Print message
-        Serial.print("Reading from Slave: ");
-        
-        // Read from Slave
-        Wire.requestFrom(target, (size_t)MEM_LEN); // Read from Slave (string len unknown, request full buffer)
-
-        // Check if error occured
-        if(Wire.getError())
-            Serial.print("FAIL\n");
-        else
-        {
-            // If no error then read Rx data into buffer and print
-            Wire.read(databuf, Wire.available());
-            Serial.printf("'%s' OK\n",databuf);
-        }
-
-        digitalWrite(LED_BUILTIN,LOW);    // LED off
-        delay(100);                       // Delay to space out tests
-    }
 }
 
+//
+// handle Rx Event (incoming I2C data)
+//
+void receiveEvent(size_t count)
+{
+  Wire.read(databuf, count);  // copy Rx data to databuf
+  received = count;           // set received flag to count, this triggers print in main loop
+}
+
+//
+// handle Tx Event (outgoing I2C data)
+//
+void requestEvent(void)
+{
+  Wire.write(databuf, MEM_LEN); // fill Tx buffer (send full mem)
+}
+
+
+
+/*
+   ON:
+   Decoded NEC: F7C03F (32 bits)
+  Raw (68): 9100 -4550 600 -550 550 -600 550 -600 550 -600 550 -550 550 -600 550 -600 550 -600 550 -1700 600 -1650 600 -1650 600 -1700 550 -550 600 -1700 550 -1700 550 -1700 600 -1650 600 -1650 600 -550 550 -600 550 -600 550 -600 550 -600 550 -600 550 -550 550 -600 550 -1700 600 -1700 550 -1700 550 -1700 600 -1650 600 -1650 600
+
+   OFF:
+  Decoded NEC: F740BF (32 bits)
+  Raw (68): 9100 -4550 600 -500 650 -500 650 -500 650 -500 600 -550 600 -550 600 -500 650 -500 650 -1600 650 -1650 600 -1650 600 -1650 600 -550 600 -1650 600 -1650 650 -1650 600 -500 650 -1650 600 -500 650 -500 650 -500 600 -550 600 -550 600 -550 600 -1650 600 -550 600 -1650 600 -1650 600 -1650 650 -1600 650 -1650 600 -1650 600
+
+   Luminosity down:
+  Decoded NEC: F7807F (32 bits)
+  Raw (68): 9100 -4500 650 -500 650 -500 650 -500 600 -550 600 -550 600 -550 600 -500 650 -500 650 -1600 650 -1650 600 -1650 600 -1650 600 -550 600 -1650 600 -1650 650 -1600 650 -1650 600 -500 650 -500 650 -500 600 -550 600 -550 600 -550 600 -500 650 -500 650 -1600 650 -1650 600 -1650 600 -1650 600 -1650 650 -1600 650 -1650 600
+
+   Luminosity up:
+  Decoded NEC: F700FF (32 bits)
+  Raw (68): 9100 -4500 650 -500 650 -500 600 -550 600 -550 600 -550 600 -500 650 -500 650 -500 600 -1650 650 -1600 650 -1650 600 -1650 600 -550 600 -1650 600 -1650 600 -1650 650 -500 600 -550 600 -550 600 -550 600 -500 650 -500 650 -500 650 -500 600 -1650 650 -1600 650 -1650 600 -1650 600 -1650 600 -1650 650 -1600 650 -1650 600
+
+   White:
+  Decoded NEC: F7E01F (32 bits)
+  Raw (68): 9100 -4550 600 -550 550 -600 550 -550 600 -550 600 -550 600 -550 600 -550 550 -600 550 -1700 550 -1700 600 -1650 600 -1650 600 -550 600 -1650 600 -1700 550 -1700 550 -1700 600 -1650 600 -1650 600 -550 600 -550 600 -550 550 -600 550 -600 550 -550 600 -550 600 -550 600 -1650 600 -1650 600 -1700 550 -1700 550 -1700 600
+
+   Fade:
+   Decoded NEC: F7C837 (32 bits)
+  Raw (68): 9100 -4550 550 -550 600 -550 600 -550 600 -550 550 -600 550 -600 550 -550 600 -550 600 -1650 600 -1700 550 -1700 550 -1700 600 -550 600 -1650 600 -1650 600 -1650 600 -1700 550 -1700 550 -600 550 -600 550 -1700 550 -600 550 -550 600 -550 600 -550 600 -550 550 -1700 600 -1650 600 -550 600 -1650 600 -1650 600 -1700 550
+
+   Smooth:
+   Decoded NEC: F7E817 (32 bits)
+  Raw (68): 9100 -4550 600 -500 650 -500 650 -500 650 -500 600 -550 600 -550 600 -500 650 -500 650 -1600 650 -1650 600 -1650 600 -1650 650 -500 600 -1650 650 -1600 650 -1600 650 -1650 600 -1650 600 -1650 600 -550 600 -1650 600 -550 600 -550 600 -550 600 -500 650 -500 650 -500 600 -1650 650 -500 600 -1650 650 -1650 600 -1650 600
+  F
+
+*/
