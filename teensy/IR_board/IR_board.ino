@@ -67,12 +67,14 @@ void loop()
       Serial.println(floodState);
       if (floodState == 255) {
         irsend.sendNEC(0xF7C03F, 32);  //ON
-        Serial.print("Floodstate ON");
         delay(50);
+        irsend.sendNEC(0xF7C837, 32);
+        delay(50);
+        Serial.print("Floodstate ON");
       } else {
         irsend.sendNEC(0xF740BF, 32); //OFF
-        Serial.print("Floodstate OFF");
         delay(50);
+        Serial.print("Floodstate OFF");
       }
       lastfloodState = floodState;
     }
