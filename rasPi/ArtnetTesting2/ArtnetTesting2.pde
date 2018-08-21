@@ -15,22 +15,7 @@ boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
-Pattern patterns[] = {
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), 
-  new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown(), new TraceDown()
-  //new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), 
-  //new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), new FadeTrace(), 
-};
+Pattern defaultPattern = new SingleTrace();
 
 
 //___________________________
@@ -250,7 +235,7 @@ void drawPatternToPatternBuffer() {
         // if (readFromScreen == false && readFromImage == false) {
         //   pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         // } else {
-        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        led[i][j] = defaultPattern.paintLed(position, remaining, led[i][j]);
         // }
       } else {
         float position = 1.0 - (i/(float)(numLeds));
@@ -258,7 +243,7 @@ void drawPatternToPatternBuffer() {
         //if (readFromScreen == false && readFromImage == false) {
         //  pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         //} else {
-        led[i][j] = patterns[j].paintLed(position, remaining, led[i][j]);
+        led[i][j] = defaultPattern.paintLed(position, remaining, led[i][j]);
         //}
       }
     }
