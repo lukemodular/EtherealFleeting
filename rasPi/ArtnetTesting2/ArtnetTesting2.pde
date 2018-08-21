@@ -383,7 +383,7 @@ void drawImageToScreen() {
   int currentImageIndex = defaultImageIndex;
   
   // UNCOMMENT to cycle images
-  //currentImageIndex = (defaultImageIndex + millis() / (1000*10)) % maxImages;
+  currentImageIndex = (defaultImageIndex + millis() / (500*10)) % maxImages;
 
   PImage displayImage = images[currentImageIndex];
   
