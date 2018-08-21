@@ -143,6 +143,7 @@ public class PoofEvents {
     return flood;
   }
 
+  // @deprecated
   public boolean shouldReset() {
     boolean value = resetPattern;
     resetPattern = false;

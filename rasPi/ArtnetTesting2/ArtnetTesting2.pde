@@ -170,7 +170,7 @@ void draw()
     //image(texture, width*2/3, 200);
   }
 
-  drawImageToScreen();
+  //drawImageToScreen();
 
   loadPixels();
 
@@ -407,7 +407,7 @@ void drawImageToScreen() {
   //int verticalPos = (mouseX/10) % displayImageHeight;
 
   // fade in 
-  //tint(255, imageBrightness(0));
+  tint(255, imageBrightness(0));
 
   // draw image at vertical position
   image(displayImage, imageStartX, imageStartY + verticalPos, imageWidth, displayImageHeight);
