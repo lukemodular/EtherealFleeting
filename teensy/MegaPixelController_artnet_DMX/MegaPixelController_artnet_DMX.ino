@@ -93,20 +93,20 @@ EthernetUDP Udp;
 #define ETHERNET_BUFFER 576 //540 is artnet leave at 636 for e1.31
 /// Change Values and needed.
 
-#define NUM_STRIPS 6
-#define NUM_LEDS_PER_STRIP 300
-#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
-#define UNIVERSE_COUNT 12
-#define TOTAL_UNIVERSE_COUNT 14
-#define LEDS_PER_UNIVERSE 150
-
 //#define NUM_STRIPS 6
 //#define NUM_LEDS_PER_STRIP 300
-//#define NUM_LEDS 2100 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
-//#define CHANNEL_COUNT 6300 //because it divides by 3 nicely
-//#define UNIVERSE_COUNT 14
+//#define NUM_LEDS 1800 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+//#define CHANNEL_COUNT 5400 //because it divides by 3 nicely
+//#define UNIVERSE_COUNT 11
+//#define TOTAL_UNIVERSE_COUNT 13
 //#define LEDS_PER_UNIVERSE 150
+
+#define NUM_STRIPS 7
+#define NUM_LEDS_PER_STRIP 300
+#define NUM_LEDS 2100 // with current fastLED and OctoWs2811 libraries buffers... do not go higher than this - Runs out of SRAM
+#define CHANNEL_COUNT 6300 //because it divides by 3 nicely
+#define UNIVERSE_COUNT 13
+#define LEDS_PER_UNIVERSE 150
 
 //ARTNET PACKET
 const int art_net_header_size = 17;
@@ -326,66 +326,85 @@ void loop() {
 
   //Process packets
   int packetSize = Udp.parsePacket(); //Read UDP packet count
-  if (c > TOTAL_UNIVERSE_COUNT) {
+  if (c > UNIVERSE_COUNT) {
     c = 0;
+    //Serial.println("reset_count");
   }
 
   if (packetSize) {
 
-    if (c == 13 || c == 14) {
-      if (c == 13) {
-        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
-        int count = checkARTHeaders(packetBuffer, packetSize);
-        if (count) {
-          //read incoming universe
-          byte fog = packetBuffer[18];
-          //Serial.println(count);
-          //Serial.println(packetSize);
-          Serial.print("Fog value: ");
-          Serial.println(fog);
-          DmxSimple.write(1, fog);
-          c = c + 1;
-          //Serial.print(c);
-          //Serial.println("fogUniverse");
-        }
-      }
-      if (c == 14) {
-        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
-        int count = checkARTHeaders(packetBuffer, packetSize);
-        if (count) {
-          //Serial.println(count);
-          //Serial.println(packetSize);
-          c = c + 1;
-          Serial.print(c);
-          Serial.println("floodUniverse");
-        }
-      }
-    } else {
+    //    if (c == 12 || c == 13) {
+    //
+    //      if (c == 12) {
+    //        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+    //        int count = checkARTHeaders(packetBuffer, packetSize);
+    //        if (count) {
+    //          //read incoming universe
+    //          byte fog = packetBuffer[18];
+    //          //Serial.println(count);
+    //          //Serial.println(packetSize);
+    //          Serial.print("Fog value: ");
+    //          Serial.println(fog);
+    //          DmxSimple.write(1, fog);
+    //          Serial.print(c);
+    //          Serial.println("fogUniverse");
+    //          c = c + 1;
+    //        }
+    //      }
+    //
+    //      if (c == 13) {
+    //        Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+    //        int count = checkARTHeaders(packetBuffer, packetSize);
+    //        if (count) {
+    //          //read incoming universe
+    //          byte flood = packetBuffer[18];
+    //          //Serial.println(count);
+    //          //Serial.println(packetSize);
+    //          Serial.print("Flood value: ");
+    //          Serial.println(flood);
+    //          //Serial.println(count);
+    //          //Serial.println(packetSize);
+    //          Serial.print(c);
+    //          Serial.println("floodUniverse");
+    //          c = c + 1;
+    //        }
+    //      }
+    //    } else {
 
-      Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+    Udp.read(packetBuffer, ETHERNET_BUFFER); //read UDP packet
+    //Serial.println(packetSize);
+    Serial.println(packetBuffer[14]);
+    //SACN
+    //int count = checkACNHeaders(packetBuffer, packetSize);
+
+    //ARTNET
+    int count = checkARTHeaders(packetBuffer, packetSize);
+    if (count) {
+      //Serial.println(count);
       //Serial.println(packetSize);
-
-      //SACN
-      //int count = checkACNHeaders(packetBuffer, packetSize);
-
-      //ARTNET
-      int count = checkARTHeaders(packetBuffer, packetSize);
-      if (count) {
-
-        //Serial.println(count);
-        //Serial.println(packetSize);
-
-        artnetDMXReceived(packetBuffer, count, c); //process data function
-
-        c = c + 1;
-        //Serial.print(c);
-        //Serial.println("LED Universe");
+      if (packetBuffer[14] == 12) {
+        byte fog = packetBuffer[18];
+        DmxSimple.write(1, fog);
+        Serial.print("fog ");
+        Serial.println(fog);
+      }
+      if (packetBuffer[14] == 13) {
+        byte flood = packetBuffer[19];
+        Serial.print("flood ");
+        Serial.println(flood);
       }
 
+
+      artnetDMXReceived(packetBuffer, count, packetBuffer[14]); //process data function
+      //Serial.print("LED Universe");
+      //Serial.println(c);
+      //c = c + 1;
     }
 
-
   }
+
+
+  //}
 
 }
 

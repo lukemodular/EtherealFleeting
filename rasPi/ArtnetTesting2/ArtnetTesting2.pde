@@ -170,7 +170,7 @@ void draw()
     //image(texture, width*2/3, 200);
   }
 
-  //drawImageToScreen();
+  drawImageToScreen();
 
   loadPixels();
 
@@ -192,8 +192,9 @@ void draw()
 
   drawPixelBuffer();
 
-  //println(frameRate);
+  println(frameRate);
 }  // end draw()
+
 
 // clock function
 void updateEllapseTime() {
@@ -391,7 +392,7 @@ void drawImageToScreen() {
   //imageWidth = displayImage.width;
 
   // create a scrolling effect by changing the vertical position
-  int verticalPos = (millis()/100) % displayImageHeight;
+  int verticalPos = (millis()/60) % displayImageHeight;
   
   // UNCOMMENT to test using the mouseX position for troubleshooting
   //int verticalPos = (mouseX/10) % displayImageHeight;
