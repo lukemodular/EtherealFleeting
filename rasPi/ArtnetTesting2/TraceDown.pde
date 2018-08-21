@@ -2,19 +2,24 @@ public class TraceDown extends Pattern {
 
   color paintLed (float position, float remaining, color previous) {
 
-    //if (remaining == 0) return color(0, 0, 0);
 
-    // create color
-    int c = color(frameCount % 360, 80, 100, 50);
-    //int c = color(0, 0, (int)100);
-    if (abs(remaining/2-position) < .07)
-      return c;
-
-    if (abs(1.0-remaining/2-position) < .07) 
-      return c;
+    float limit = .07;
+    remaining -= limit;
+    float active = abs(1.0 - remaining-position);
+    if (active < limit) {
+      float value = (1.0 - active / limit) * brightness(previous);
+      return color(frameCount % 360, 80, value);
+    }
+    
+    active = abs(remaining-position);
+    if (active < limit) {
+      float value = (1.0 - active / limit) * brightness(previous);
+      return color(frameCount % 360, 80, value);
+    }
+    
 
     // return fade
 
-    return color(0, 0, 0);
+    return previous;
   }
 }
