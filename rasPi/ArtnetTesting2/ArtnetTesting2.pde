@@ -15,7 +15,9 @@ boolean readFromImage = false;
 boolean writeToScreen = true;
 boolean readAnemometerSerial = false;
 
-Pattern defaultPattern = new SingleTrace();
+//Pattern defaultPattern = new SingleTrace();
+//Pattern defaultPattern = new SingleTrace();
+Pattern defaultPattern = new TraceDown();
 
 
 //___________________________
@@ -146,18 +148,11 @@ void draw()
   //change direction
   //if (ellapseTimeMs[0]> durationMs) direction = !direction;
 
-  drawPatternToPatternBuffer();
-
-  // show loaded image on screen
-  if (writeToScreen == true) {
-    showPattern();
-    //draw loaded image to screen
-    //image(texture, width*2/3, 200);
-  }
-
-  //drawImageToScreen();
+  drawImageToScreen();
 
   loadPixels();
+
+  drawPatternToScreen();
 
   // fog pattern and draw
   poof = poofEvent.updatePoofEvent();  
@@ -215,50 +210,27 @@ void updatePixelBufferFromPattern() {
 
 float patternRemaining = 0.0;
 
-void drawPatternToPatternBuffer() {
+void drawPatternToScreen() {
 
-  // get pattern timers
-  patternRemaining = poofEvent.calculatePatternRemaining();
-  //println("Time "+ patternRemaining);
-  float remaining = 0.0;
+  // get pattern based on poof
+  float remaining = poofEvent.calculatePatternRemaining();
+  
+  //println("Time "+ remaining);
+  // remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+
+  
   // draw pattern
   for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
 
       if (ellapseTimeMs[j]> durationMs) {
         ellapseTimeMsStartTime[j] = 0;
-      } else if (direction==true) {
-        float position = i/(float)(numLeds);
-        // remaining = 1.0 - ellapseTimeMs[j]/durationMs;\
-        remaining = patternRemaining;
+      } 
 
-        // if (readFromScreen == false && readFromImage == false) {
-        //   pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        // } else {
-        led[i][j] = defaultPattern.paintLed(position, remaining, led[i][j]);
-        // }
-      } else {
-        float position = 1.0 - (i/(float)(numLeds));
-        remaining = ellapseTimeMs[j]/durationMs;
-        //if (readFromScreen == false && readFromImage == false) {
-        //  pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
-        //} else {
-        led[i][j] = defaultPattern.paintLed(position, remaining, led[i][j]);
-        //}
-      }
-    }
-  }
-}
+      float position = i/(float)(numLeds);
 
-// draw pattern on screen
-void showPattern() {
-  for (int i = 0; i < numLeds; i++) {
-    for (int j = 0; j < numStrands; j++) {
-      // show only pixel buffer if not reading from screen
-      //if (readFromScreen) {
-      fill(led[i][j]);
+      fill(defaultPattern.paintLed(position, remaining, get(i*size +size/2, j*size+size/2)));
       rect(i*size, j*size, size, size);
-      //}
     }
   }
 }
@@ -384,9 +356,9 @@ void drawImageToScreen() {
   //imageWidth = displayImage.width;
 
   // create a scrolling effect by changing the vertical position
-//  int verticalPos = (millis()/100) % displayImageHeight;
+  //  int verticalPos = (millis()/100) % displayImageHeight;
   int verticalPos = (millis()/60) % displayImageHeight;
-  
+
 
   // UNCOMMENT to test using the mouseX position for troubleshooting
   //int verticalPos = (mouseX/10) % displayImageHeight;
