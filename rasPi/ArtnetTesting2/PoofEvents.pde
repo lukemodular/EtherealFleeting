@@ -38,7 +38,7 @@ public class PoofEvents {
 
   int totalPoofsDuration = 0;
 
-  int preFogEventDuration = 3000; // variable
+  public int preFogEventDuration = 3000; // variable
 
   int floodEventDuration = 5000; // calculate fog duration length and add random
   int additionalFloodTime = 2000;
@@ -49,6 +49,14 @@ public class PoofEvents {
   int floodResetDuration = fogEventDuration - preFogEventDuration;
   boolean gotChance;
   float chance = 1;
+
+  //_________________________________________
+  // setup pattern gen timers
+  boolean resetPattern = false;
+  int resetCount = 0;
+  float remaining = 0.0;
+  float timeStart = 0.0;
+  float patternDurationMs = 1.0;
 
   boolean updatePoofEvent() {
 
@@ -75,7 +83,6 @@ public class PoofEvents {
       resetFogEvent();
     }
 
-
     //println(getPoofEllapseTime() + " " + poofs + " " +poofDuration + " " +poofEventDuration+ " " +poofCount+ " "); 
     updatePoofTimers();
 
@@ -85,9 +92,7 @@ public class PoofEvents {
   }
 
   boolean updateFloodEvent() {
-    
-    //println("chance "+chance);
-    // println(poofCount+ " poof count ", +poofs+" ");
+
     // floodlight timer, if not recalculated and poofing has stopped
     if (!gotNewDuration && poofs == poofCount) { 
       // get new floodlight duration: stop after total poof times and a new random
@@ -109,6 +114,7 @@ public class PoofEvents {
         print("random "+ chance);
         gotChance = true;
       }
+      resetCount = 0;
     }
 
     // check that new poof counts has updated and new flood event duation has calculated
@@ -118,13 +124,39 @@ public class PoofEvents {
     }
 
     // 
-    if (getFogEventEllapseTime() > floodResetDuration) {
+    if (getFogEventEllapseTime() > floodResetDuration ) {
       floodEvent(); // check if flood should be on, then turn on, get additional floodtime
+      if (resetCount == 0) {
+        resetPattern = true;
+        resetCount++;
+        
+        // pattern stuff
+        timeStart = millis(); // start pattern at preFogtimer
+        patternDurationMs = preFogEventDuration;
+      }
     } 
 
     int floodLength = preFogEventDuration + floodEventDuration;
     //println("flood? "+flood +" "+ floodLength+ " " +poofCount+" "+additionalFloodTime+" "+gotNewDuration);
     return flood;
+  }
+
+  public boolean shouldReset() {
+    boolean value = resetPattern;
+    resetPattern = false;
+    return value;
+  }
+
+
+  public float calculatePatternRemaining() {
+    
+    remaining = 1-(millis() - timeStart)/patternDurationMs;
+    if (remaining > 0)
+      //println("remaining" + remaining);
+      remaining = remaining;
+    else remaining = 0;
+
+    return remaining;
   }
 
   void enablePoof() {
@@ -163,14 +195,19 @@ public class PoofEvents {
     resetPoofTime(POOF_DURATION);
     poofDuration = getNewPoofDuration();
     poofEventDuration = getNewPoofEventDuration();
+    timeStart = millis(); // restart geometry pattern
+    // set pattern duration to leadup time to poof
+    // set this to poofDuration if you want fast pattern during the poof
+    patternDurationMs = poofEventDuration; 
+    
   }
 
   void resetFogEvent() {
     resetPoofTime(FOG_EVENT_DURATION);
     resetPoofCount();
     gotNewDuration = false;
-    
-    
+
+
     totalPoofsDuration = 0;
     gotChance = false;
   }
@@ -185,8 +222,8 @@ public class PoofEvents {
   }
 
   void floodEvent() {
-    
-    if (chance > .35 && !flood) 
+
+    if (chance > 0 && !flood) 
       //print("flooding "+chance);
       flood = true;
   }

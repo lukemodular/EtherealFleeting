@@ -159,7 +159,7 @@ void draw()
   }
 
   //change direction
-  if (ellapseTimeMs[0]> durationMs) direction = !direction;
+  //if (ellapseTimeMs[0]> durationMs) direction = !direction;
 
   drawPatternToPatternBuffer();
 
@@ -227,9 +227,14 @@ void updatePixelBufferFromPattern() {
   }
 }
 
+float patternRemaining = 0.0;
 
 void drawPatternToPatternBuffer() {
 
+  // get pattern timers
+  patternRemaining = poofEvent.calculatePatternRemaining();
+  //println("Time "+ patternRemaining);
+  float remaining = 0.0;
   // draw pattern
   for (int i = 0; i <numLeds; i++) {
     for (int j = 0; j < numStrands; j++) {
@@ -238,7 +243,9 @@ void drawPatternToPatternBuffer() {
         ellapseTimeMsStartTime[j] = 0;
       } else if (direction==true) {
         float position = i/(float)(numLeds);
-        float remaining = 1.0 - ellapseTimeMs[j]/durationMs;
+        // remaining = 1.0 - ellapseTimeMs[j]/durationMs;\
+        remaining = patternRemaining;
+
         // if (readFromScreen == false && readFromImage == false) {
         //   pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         // } else {
@@ -246,7 +253,7 @@ void drawPatternToPatternBuffer() {
         // }
       } else {
         float position = 1.0 - (i/(float)(numLeds));
-        float remaining = ellapseTimeMs[j]/durationMs;
+        remaining = ellapseTimeMs[j]/durationMs;
         //if (readFromScreen == false && readFromImage == false) {
         //  pixelBuffer[i][j] = patterns[j].paintLed(position, remaining, pixelBuffer[i][j]);
         //} else {
@@ -380,19 +387,19 @@ int getPixelRow(int imageRow) {
 void drawImageToScreen() {
 
   int currentImageIndex = defaultImageIndex;
-  
+
   // UNCOMMENT to cycle images
   //currentImageIndex = (defaultImageIndex + millis() / (1000*10)) % maxImages;
 
   PImage displayImage = images[currentImageIndex];
-  
+
   // use current image height
   int displayImageHeight = displayImage.height;
   //imageWidth = displayImage.width;
 
   // create a scrolling effect by changing the vertical position
   int verticalPos = (millis()/100) % displayImageHeight;
-  
+
   // UNCOMMENT to test using the mouseX position for troubleshooting
   //int verticalPos = (mouseX/10) % displayImageHeight;
 
@@ -401,7 +408,7 @@ void drawImageToScreen() {
 
   // draw image at vertical position
   image(displayImage, imageStartX, imageStartY + verticalPos, imageWidth, displayImageHeight);
-  
+
   //draw image an image height behind the vertical position
   image(displayImage, imageStartX, imageStartY + verticalPos - displayImageHeight, imageWidth, displayImageHeight);
 
@@ -410,9 +417,9 @@ void drawImageToScreen() {
   // scale(1.0, -1.0);
   //image(displayImage, imageStartX, imageStartY + verticalPos - imageHeight, imageWidth, imageHeight);
   //popMatrix();
-  
+
   //println(millis() +" " + verticalPos);
-  
+
   // blackout screen where image is not used for painting pixels;
   fill(0);
   rect(0, imageHeight+1, imageWidth, 270-imageHeight);
