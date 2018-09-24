@@ -13,9 +13,7 @@ SHELL=/bin/bash
 #@reboot /home/alien/Downloads/processing-3.4/processing-java  --sketch="/home/alien/Documents/git/EtherealFleeting/rasPi/ArtnetTesting2" --run  > /home/alien/startup.log 2>&1 &
 
 #send to /dev/null for performance/stability
-@reboot xvfb-run /home/alien/Downloads/processing-3.4/processing-java  --sketch="/home/alien/Documen\|
-ts/git/EtherealFleeting/rasPi/ArtnetTesting2" --run  > /dev/null 2>&1 &
-
+@reboot xvfb-run /home/alien/Downloads/processing-3.4/processing-java  --sketch="/home/alien/Documents/git/EtherealFleeting/rasPi/ArtnetTesting2" --run  > /dev/null 2>&1 &
 
 
 
