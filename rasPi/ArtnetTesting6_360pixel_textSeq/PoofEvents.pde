@@ -1,4 +1,4 @@
-public class PoofEvents { 
+public class PoofEvents {
 
   public int poofEventDurationMin = 1000;  
   public int poofEventDurationMax = 30000;  
@@ -14,11 +14,16 @@ public class PoofEvents {
   public int poofDurationMin = 2100;
   public int poofDurationMax = 2700;
 
+  public int poofDurationShort = 2200;
+  public int poofDurationLong = 3500;
+  public int poofMorseDuration;
+
   public int fanDurationMin = 15000;
   public int fanDurationMax = 1600;
 
   public int poofCountMin = 1;
   public int poofCountMax = 2;
+  public int poofMorseCound;
 
   //time before the first poof event
   public int preFogMin = 3000;
@@ -35,6 +40,8 @@ public class PoofEvents {
 
   long[] ellapseTimeMs = new long[3];
   long[] ellapseTimeMsStartTime = new long[3];
+
+  int letterIndex = 0;
 
   int poofCount = 2;
   int poofs = 0;
@@ -108,8 +115,8 @@ public class PoofEvents {
     } else {
       enableFan();
     }
-    
-        // start the next fog event (reset poof counts)
+
+    // start the next fog event (reset poof counts)
     if (getFogEventEllapseTime() > fogEventDuration ) {
       resetFanEvent();
     }
@@ -204,8 +211,8 @@ public class PoofEvents {
         poofCount+ " poof count ");
     }
   }
-  
-    void enableFan() {
+
+  void enableFan() {
     fan = true;
   }
 
@@ -213,8 +220,8 @@ public class PoofEvents {
     poof = false;
     poofNotCounted = true; // poof chain event is over
   }
-  
-    void disableFan() {
+
+  void disableFan() {
     fan = false;
   }
 
@@ -283,7 +290,22 @@ public class PoofEvents {
   }
 
   int getNewPoofDuration() {
-    return (int)random(poofDurationMin, poofDurationMax);
+    //return (int)random(poofDurationMin, poofDurationMax);
+    if (letterIndex > decodedPoem.length()) {
+      letterIndex = 0;
+    }
+
+    if (String.valueOf(decodedPoem.charAt(letterIndex)).equals("_")) {
+      poofMorseDuration = poofDurationLong;
+    } else {
+      poofMorseDuration = poofDurationShort;
+    }
+    letterIndex = letterIndex+1;
+
+    print("poofMorseDuration: ");
+    println(poofMorseDuration);
+
+    return poofMorseDuration;
   }
 
   int getNewFanDuration() {
@@ -291,6 +313,12 @@ public class PoofEvents {
   }
 
   int getNewPoofCount() {
+    //poof Count of letter, encode here
+    //if (letterIndex > poem.length()) {
+    //  letterIndex = 0;
+    //}
+    //String.valueOf(decodedPoem.charAt(letterIndex));
+
     return (int)random(poofCountMin, poofCountMax);
   }
 

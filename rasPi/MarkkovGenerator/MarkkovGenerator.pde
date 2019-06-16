@@ -2,7 +2,8 @@ import rita.*;
 
 RiMarkov markov;
 String line = "click to (re)generate!";
-String[] files = { "wittgenstein.txt", "kafka.txt" };
+String[] files = { "wittgenstein.txt", "flusser.txt" };
+//String[] files = { "flusser.txt" };
 int x = 160, y = 240;
 
 void setup()
