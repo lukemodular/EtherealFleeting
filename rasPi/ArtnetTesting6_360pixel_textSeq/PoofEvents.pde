@@ -232,6 +232,7 @@ public class PoofEvents {
 
   void resetPoofCount() {
     poofs = 0;
+    decodedLetterIndex = 0;
     poofNotCounted = true;
     poofCount = getNewPoofCount();
   }

@@ -145,9 +145,9 @@ void setup()
   poem = RiTa.join(lines, " ");
 
   poem = poem.replaceAll("\\s+", "");
-  poem = poem.replaceAll("?", "");
-  poem = poem.replaceAll(";", "");
-  poem = poem.replaceAll("'", "");
+  poem = poem.replaceAll("\\?", "");
+  poem = poem.replaceAll("\\;", "");
+  poem = poem.replaceAll("\\'", "");
   poem = poem.toLowerCase();
   
   println(poem);
