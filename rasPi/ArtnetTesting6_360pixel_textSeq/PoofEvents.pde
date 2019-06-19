@@ -1,29 +1,33 @@
 public class PoofEvents {
 
-  public int poofEventDurationMin = 1000;  
-  public int poofEventDurationMax = 30000;  
+  public String decodedLetter = ".";
+  public String letter;
+
+  //public int poofEventDurationMin = 8000;  
+  //public int poofEventDurationMax = 10000;
+  public int poofMorseEventDuration = 6100;
 
   public boolean poof = false;
   public boolean fan = false;
   public boolean flood = false;
 
   //random between fog events
-  public int poofBetweenEventMin = 100000;
-  public int poofBetweenEventMax = 130000; //not used for now
+  public int poofBetweenEventMin = 60000;
+  public int poofBetweenEventMax = 90000;
 
-  public int poofDurationMin = 2100;
-  public int poofDurationMax = 2700;
+  //public int poofDurationMin = 2100;
+  //public int poofDurationMax = 2700;
 
-  public int poofDurationShort = 2200;
-  public int poofDurationLong = 3500;
+  public int poofDurationShort = 3000;
+  public int poofDurationLong = 6000;
   public int poofMorseDuration;
 
-  public int fanDurationMin = 15000;
-  public int fanDurationMax = 1600;
+  public int fanDurationMin = 6000;
+  public int fanDurationMax = 8000;
 
-  public int poofCountMin = 1;
-  public int poofCountMax = 2;
-  public int poofMorseCound;
+  //public int poofCountMin = 1;
+  //public int poofCountMax = 4;
+  public int poofMorseCount;
 
   //time before the first poof event
   public int preFogMin = 3000;
@@ -42,6 +46,7 @@ public class PoofEvents {
   long[] ellapseTimeMsStartTime = new long[3];
 
   int letterIndex = 0;
+  int decodedLetterIndex = 0;
 
   int poofCount = 2;
   int poofs = 0;
@@ -144,7 +149,7 @@ public class PoofEvents {
       // determine in floods come on
       if (!gotChance) {
         chance = getRandomFloodChance();
-        print("random "+ chance);
+        //println("random "+ chance);
         gotChance = true;
       }
       resetCount = 0;
@@ -169,7 +174,7 @@ public class PoofEvents {
       }
     } 
 
-    int floodLength = preFogEventDuration + floodEventDuration;
+    //int floodLength = preFogEventDuration + floodEventDuration;
     //println("flood? "+flood +" "+ floodLength+ " " +poofCount+" "+additionalFloodTime+" "+gotNewDuration);
     return flood;
   }
@@ -252,8 +257,9 @@ public class PoofEvents {
   }
 
   void resetFogEvent() {
-    resetPoofTime(FOG_EVENT_DURATION);
     resetPoofCount();
+    resetPoofTime(FOG_EVENT_DURATION);
+    poofDuration = getNewPoofDuration();
     gotNewDuration = false;
 
     //totalPoofsDuration = 0;
@@ -274,7 +280,7 @@ public class PoofEvents {
   void floodEvent() {
 
     if (chance > .35 && !flood) 
-      //print("flooding "+chance);
+      //println("flooding "+chance);
       flood = true;
   }
 
@@ -282,7 +288,8 @@ public class PoofEvents {
   // RANDOM 
 
   int getNewPoofEventDuration() {
-    return (int)random(poofEventDurationMin, poofEventDurationMax);
+    //return (int)random(poofEventDurationMin, poofEventDurationMax);
+    return poofMorseEventDuration;
   }
 
   int getNewBetweenEventDuration() {
@@ -291,16 +298,18 @@ public class PoofEvents {
 
   int getNewPoofDuration() {
     //return (int)random(poofDurationMin, poofDurationMax);
-    if (letterIndex > decodedPoem.length()) {
-      letterIndex = 0;
+
+    if (decodedLetterIndex > decodedLetter.length()) {
+      decodedLetterIndex = 0;
     }
 
-    if (String.valueOf(decodedPoem.charAt(letterIndex)).equals("_")) {
+    if (String.valueOf(decodedLetter.charAt(decodedLetterIndex)).equals("_")) {
       poofMorseDuration = poofDurationLong;
     } else {
       poofMorseDuration = poofDurationShort;
     }
-    letterIndex = letterIndex+1;
+
+    decodedLetterIndex = decodedLetterIndex+1;
 
     print("poofMorseDuration: ");
     println(poofMorseDuration);
@@ -313,13 +322,25 @@ public class PoofEvents {
   }
 
   int getNewPoofCount() {
-    //poof Count of letter, encode here
-    //if (letterIndex > poem.length()) {
-    //  letterIndex = 0;
-    //}
-    //String.valueOf(decodedPoem.charAt(letterIndex));
+    //return (int)random(poofCountMin, poofCountMax);
 
-    return (int)random(poofCountMin, poofCountMax);
+    //println(poem);
+
+    if (letterIndex > poem.length()) {
+      letterIndex = 0;
+    }
+
+    letter = String.valueOf(poem.charAt(letterIndex));
+    decodedLetter = encodeMorseCode(letter);
+
+    println("letterIndex: " + letterIndex);
+    letterIndex = letterIndex+1;
+
+    println("letter: " + letter);
+    println("decoded Letter: " + decodedLetter);
+    println("decoded Letterlength: " + decodedLetter.length());
+
+    return decodedLetter.length();
   }
 
   int getNewPreFogEventDuration() {
@@ -366,5 +387,31 @@ public class PoofEvents {
         ellapseTimeMs[j] = millis() - ellapseTimeMsStartTime[j];
       }
     }
+  }
+
+  String encodeMorseCode(String in_string) {
+
+    String TextInput = in_string.toLowerCase();
+    String MorseCode = new String();
+    String[] AlphabetArray = {
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", 
+      ".", ","
+    };
+    String[] MorseCodeArray = {
+      "._", "_...", "_._.", "_..", ".", ".._.", "__.", "....", "..", ".___", "_._", "._..", "__", 
+      "_.", "___", ".__.", "__._", "._.", "...", "_", ".._", "..._", ".__", "_.._", "_.__", "__..", 
+      "._._._", "__..__"
+    };
+
+    for (int i=0; i<TextInput.length(); i++) {
+      for (int j=0; j<AlphabetArray.length; j++) {
+        if (String.valueOf(TextInput.charAt(i)).equals(AlphabetArray[j])) {
+          //MorseCode += MorseCodeArray[j] + " " ;
+          MorseCode += MorseCodeArray[j];
+        }
+      }
+    }
+    return MorseCode;
   }
 }

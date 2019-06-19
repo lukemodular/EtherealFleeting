@@ -8,6 +8,7 @@
 
 import ch.bildspur.artnet.*;
 import processing.serial.*;
+import rita.*;
 
 //___________________________
 // setup pattern
@@ -92,8 +93,12 @@ int defaultImageIndex = 0;
 int maxImages = 1; // total # of images
 PImage[] images = new PImage[maxImages];
 
-String poem = "In short: Everything is becoming absurd. Since they are no longer able to decode them, their lives become a function of their own images: Imagination has turned into hallucination. Changing the questionfree from what? intofree for what? ' ; this change that occurs when freedom has been achieved has accompanied me on my migrations like a basso continuo. This reversal of the function of the images they create. Human beings forget they created the images in order to orientate themselves in the world. This is what we are like, those of us who are nomads, who come out of the collapse of a settled way of life. Our thoughts, feelings, desires and actions are being robotized; lifeis coming to mean feeding apparatuses and being fed by them. So where is there room for human freedom? Essentially this is a question ofamnesia '. For there is a general desire to be endlessly remembered and endlessly repeatable.";
-String decodedPoem;
+
+//text generation
+String poem = "In short, Everything is becoming absurd. Since they are no longer able to decode them, their lives become a function of their own images: Imagination has turned into hallucination. Changing the questionfree from what? intofree for what? ' ; this change that occurs when freedom has been achieved has accompanied me on my migrations like a basso continuo. This reversal of the function of the images they create. Human beings forget they created the images in order to orientate themselves in the world. This is what we are like, those of us who are nomads, who come out of the collapse of a settled way of life. Our thoughts, feelings, desires and actions are being robotized; lifeis coming to mean feeding apparatuses and being fed by them. So where is there room for human freedom? Essentially this is a question ofamnesia '. For there is a general desire to be endlessly remembered and endlessly repeatable.";
+RiMarkov markov;
+//String[] files = { "wittgenstein.txt", "flusser.txt" };
+String[] files = { "flusser.txt" };
 
 //_________________________________________________________
 void setup()
@@ -129,9 +134,23 @@ void setup()
   for (int i = 0; i < images.length; i++) {
     images[i] = loadImage("cloud" + i + ".jpg");
   }
-  
-  decodedPoem = encodeMorseCode(poem);
 
+  // generate text
+
+  // create a markov model w' n=3 from the files
+  markov = new RiMarkov(4);
+  markov.loadFrom(files, this);
+
+  String[] lines = markov.generateSentences(10);
+  poem = RiTa.join(lines, " ");
+
+  poem = poem.replaceAll("\\s+", "");
+  poem = poem.replaceAll("?", "");
+  poem = poem.replaceAll(";", "");
+  poem = poem.replaceAll("'", "");
+  poem = poem.toLowerCase();
+  
+  println(poem);
 }
 
 
@@ -389,7 +408,7 @@ void drawImageToScreen() {
   //imageWidth = displayImage.width;
 
   // create a scrolling effect by changing the vertical position
-    int verticalPos = (millis()/50) % displayImageHeight;
+  int verticalPos = (millis()/50) % displayImageHeight;
   //int verticalPos = (millis()/playBackSpeed(50)) % displayImageHeight;
 
   // UNCOMMENT to test using the mouseX position for troubleshooting
@@ -459,30 +478,6 @@ void updatePixelBufferFromImage() {
       drawSinglePixelBuffer(i, getPixelRow(j), pixelBuffer);
     }
   }
-}
-
-
-String encodeMorseCode(String in_string) {
-    
-  String TextInput = in_string.toLowerCase();
-  String MorseCode = new String();
-  String[] AlphabetArray = {
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-  };
-  String[] MorseCodeArray = {
-    "._", "_...", "_._.", "_..", ".", ".._.", "__.", "....", "..", ".___", "_._", "._..", "__", 
-    "_.", "___", ".__.", "__._", "._.", "...", "_", ".._", "..._", ".__", "_.._", "_.__", "__.."
-  };
-  
-  for (int i=0; i<TextInput.length(); i++) {
-    for (int j=0; j<AlphabetArray.length; j++) {
-      if (String.valueOf(TextInput.charAt(i)).equals(AlphabetArray[j])) {
-        MorseCode += MorseCodeArray[j] + " " ;
-      }
-    }
-  }
-  return MorseCode;
 }
 
 /*
