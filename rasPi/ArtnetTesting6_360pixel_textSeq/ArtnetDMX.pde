@@ -2,7 +2,7 @@ public class ArtnetDMX {
 
   String[] ipAddressList = {"10.10.10.11", "10.10.10.12", "10.10.10.13", "10.10.10.14"};
   int numUniverseInTower = 21;
-  int numTowers = 2;
+  int numTowers = 2;  //not used for now
   int xoffset = 0;
 
   void updateArtnet(ArtNetClient artnet, byte[][] dmxData, color[][] pixelBuffer, int universe, int channels) {

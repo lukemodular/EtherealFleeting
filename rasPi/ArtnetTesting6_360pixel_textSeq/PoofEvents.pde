@@ -5,21 +5,21 @@ public class PoofEvents {
 
   //public int poofEventDurationMin = 8000;  
   //public int poofEventDurationMax = 10000;
-  public int poofMorseEventDuration = 6100;
+  public int poofMorseEventDuration = 4000;
 
   public boolean poof = false;
   public boolean fan = false;
   public boolean flood = false;
 
   //random between fog events
-  public int poofBetweenEventMin = 60000;
-  public int poofBetweenEventMax = 90000;
+  public int poofBetweenEventMin = 120000;
+  public int poofBetweenEventMax = 180000;
 
   //public int poofDurationMin = 2100;
   //public int poofDurationMax = 2700;
 
-  public int poofDurationShort = 3000;
-  public int poofDurationLong = 6000;
+  public int poofDurationShort = 1000;
+  public int poofDurationLong = 2000;
   public int poofMorseDuration;
 
   public int fanDurationMin = 6000;

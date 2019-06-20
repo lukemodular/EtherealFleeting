@@ -25,9 +25,11 @@ Pattern defaultPattern = new SingleTrace();
 //___________________________
 // setup artnet 
 ArtNetClient artnet;
-int numLedUniverse = 36; // 48 eventually + 4 for smoke machine and 4 for the lighting
-int numPixelUniverse = 42;
-int numLedChannels = 360;
+//int numLedUniverse = 36; // 48 eventually + 4 for smoke machine and 4 for the lighting
+int numLedUniverse = 18; // 48 eventually + 4 for smoke machine and 4 for the lighting
+//int numPixelUniverse = 42;
+int numPixelUniverse = 21;
+int numLedChannels = 360;  //per Universe
 byte[][] dmxData = new byte[numPixelUniverse][numLedChannels];
 ArtnetDMX LedArtnetclass = new ArtnetDMX();
 color[][] pixelBuffer = new color[numLedChannels/3][numPixelUniverse];
@@ -36,8 +38,10 @@ int numFloodChannels = 21; // 7 msg x 3 channels
 //___________________________
 // setup pixelbuffer
 
-int pixelRows = 42;
-int numTowers = 2;
+//int pixelRows = 42;
+int pixelRows = 21;
+//int numTowers = 2;
+int numTowers = 1;
 int numStripsInTower = 18;
 int pixelRowsInTower = numPixelUniverse/numTowers;
 int YDrawOffset = 120;
@@ -148,6 +152,10 @@ void setup()
   poem = poem.replaceAll("\\?", "");
   poem = poem.replaceAll("\\;", "");
   poem = poem.replaceAll("\\'", "");
+  poem = poem.replaceAll("\\-", "");
+  poem = poem.replaceAll("\\:", "");
+  poem = poem.replaceAll("\\(", "");
+  poem = poem.replaceAll("\\)", "");
   poem = poem.toLowerCase();
   
   println(poem);
