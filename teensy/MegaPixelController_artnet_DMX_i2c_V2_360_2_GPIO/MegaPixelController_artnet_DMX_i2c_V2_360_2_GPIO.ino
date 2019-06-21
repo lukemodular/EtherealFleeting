@@ -366,7 +366,7 @@ void loop() {
         //DmxSimple.write(2, vent);
         if (vent == 255) {
           digitalWrite(fanPin, HIGH);
-          Serial.print("vent ");
+          Serial.print("vent high");
           Serial.println(vent);
         }
         else {
