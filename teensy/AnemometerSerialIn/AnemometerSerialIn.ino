@@ -45,13 +45,11 @@ void setup() {
   IsDirSampleRequired = false;
   IsSpeedSampleRequired = false;
 
-  pinMode(led, OUTPUT);
-  digitalWrite(led, HIGH);
 
   TimerCount = 0;
   Rotations = 0; // Set Rotations to 0 ready for calculations
   CurrentRotations = 0;
-  Serial.begin(2000000);
+  Serial.begin(115200);
 
   pinMode(WindSensorPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(WindSensorPin), isr_rotation, FALLING);
@@ -65,6 +63,9 @@ void setup() {
     readings[thisReading] = 0;
 
   }
+
+  pinMode(led, OUTPUT);
+  digitalWrite(led, HIGH);
 }
 
 void loop() {
@@ -89,12 +90,12 @@ void loop() {
 
     WindSpeedInt = WindSpeed * 100;
 
-        buf[0] = WindSpeedInt & 255;
-        buf[1] = (WindSpeedInt >> 8) & 255;
-        buf[2] = CalDirection & 255;
-        buf[3] = (CalDirection >> 8) & 255;
-        //buf[4] = 42;
-        Serial.write(buf, sizeof(buf));
+    buf[0] = WindSpeedInt & 255;
+    buf[1] = (WindSpeedInt >> 8) & 255;
+    buf[2] = CalDirection & 255;
+    buf[3] = (CalDirection >> 8) & 255;
+    //buf[4] = 42;
+    Serial.write(buf, sizeof(buf));
 
     //    //debug
     //
@@ -103,9 +104,10 @@ void loop() {
     //        Serial.print(CalDirection);
     //        getHeading(CalDirection); Serial.print("\t\t");
     //        getWindStrength(WindSpeed);
-     
+
 
   }
+
 }
 
 // isr handler for timer interrupt
