@@ -16,5 +16,6 @@ SHELL=/bin/bash
 @reboot xvfb-run /home/alien/Downloads/processing-3.4/processing-java  --sketch="/home/alien/Documents/git/EtherealFleeting/rasPi/ArtnetTesting2" --run  > /dev/null 2>&1 &
 
 
+@reboot xvfb-run /home/pi/processing-3.5.3/processing-java --sketch="/home/pi/EtherealFleeting/rasPi/ArtnetTesting7_360pixel_textSeq/" --run  > /dev/null 2>&1 &
 
 

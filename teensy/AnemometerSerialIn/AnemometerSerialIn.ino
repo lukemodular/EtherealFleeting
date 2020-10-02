@@ -7,7 +7,7 @@
 
 #include "TimerOne.h"
 #include <math.h>
-#include <SimpleMessageSystem.h>
+//#include <SimpleMessageSystem.h>
 
 #define WindSensorPin (2) // The pin location of the anemometer sensor
 #define WindVanePin (A0) // The pin the wind vane sensor is connected to
@@ -17,7 +17,7 @@ int VaneValue; // raw analog value from wind vane
 int Direction; // translated 0 - 360 direction
 int16_t CalDirection; // converted value with offset applied
 int LastValue; // last direction value
-byte buf[4];
+byte buf[5];
 
 int led = 13;
 
@@ -50,12 +50,13 @@ void setup() {
   Rotations = 0; // Set Rotations to 0 ready for calculations
   CurrentRotations = 0;
   Serial.begin(115200);
+  //Serial.begin(250000); better error
 
   pinMode(WindSensorPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(WindSensorPin), isr_rotation, FALLING);
 
   // Setup the timer interupt
-  Timer1.initialize(25000);// Timer interrupt every 0.025 seconds, 40fps
+  Timer1.initialize(20000);// Timer interrupt every 0.02 seconds, 50fps
   Timer1.attachInterrupt(isr_timer);
 
   // initialize all the readings to 0:
@@ -94,7 +95,7 @@ void loop() {
     buf[1] = (WindSpeedInt >> 8) & 255;
     buf[2] = CalDirection & 255;
     buf[3] = (CalDirection >> 8) & 255;
-    //buf[4] = 42;
+    buf[4] = 42;
     Serial.write(buf, sizeof(buf));
 
     //    //debug

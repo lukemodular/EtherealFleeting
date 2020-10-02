@@ -6,6 +6,9 @@
 // to run from command-line 
 // processing-java --sketch="/home/pi/Documents/git/EtherealFleeting/rasPi/ArtnetTesting/" --run
 
+// to do:
+// anemometer on smoke and vent intensity: 255 * colorFraction --> intensity * windInfluence * colorFraction
+
 import ch.bildspur.artnet.*;
 import processing.serial.*;
 import rita.*;
@@ -15,7 +18,7 @@ import rita.*;
 boolean readFromScreen = true;
 boolean readFromImage = false;
 boolean writeToScreen = true;
-boolean readAnemometerSerial = true;
+boolean readAnemometerSerial = false;
 
 // pick a pattern (todo: flip between patterns with some logic)
 //Pattern defaultPattern = new TraceDown();
@@ -53,7 +56,8 @@ int pixelBSize = 4;
 Serial port;  // Create object from Serial class
 String data = "0 0";     // Data received from the serial port
 int[] nums;
-byte[] inBuffer = new byte[4];
+byte[] inBuffer = new byte[5];
+int lf = 42;      // ASCII linefeed 
 
 int windSpeed;
 int windDir;
@@ -112,7 +116,7 @@ void setup()
   colorMode(HSB, 360, 100, 100);
   textAlign(CENTER, CENTER);
   textSize(20);
-  frameRate = 52;
+  frameRate = 50;
 
   //numLeds = numLedChannels/3
   led = new color[numLeds][numStrands];
@@ -127,6 +131,7 @@ void setup()
     println(portName);
     //port = new Serial(this, portName, 250000);
     port = new Serial(this, portName, 115200);
+    port.bufferUntil(lf);
   }
 
   // load an image
@@ -144,7 +149,7 @@ void setup()
   // generate text
 
   // create a markov model w' n=3 from the files
-  markov = new RiMarkov(4);
+  markov = new RiMarkov(3);
   markov.loadFrom(files, this);
 
   String[] lines = markov.generateSentences(10);
@@ -158,6 +163,8 @@ void setup()
   poem = poem.replaceAll("\\:", "");
   poem = poem.replaceAll("\\(", "");
   poem = poem.replaceAll("\\)", "");
+  poem = poem.replaceAll("\\.", "");
+  poem = poem.replaceAll("\\,", "");
   poem = poem.toLowerCase();
 
   println(poem);
@@ -174,7 +181,7 @@ void draw()
   stroke(0);
 
   if (readAnemometerSerial == true) { 
-    readAnemometer();
+    //readAnemometer();
   }
 
   //change direction
@@ -206,7 +213,7 @@ void draw()
 
   drawPixelBuffer();
 
-  //println(frameRate);
+  println(frameRate);
 }  // end draw()
 
 
@@ -327,23 +334,35 @@ void drawSinglePixelBuffer(int i, int j, color[][] pixelBuffer) {
 }
 
 
-
-void readAnemometer() {
-  if (readAnemometerSerial == true) {
-    while (port.available() > 0) {
-      port.readBytes(inBuffer);
-      if (inBuffer != null) {
-        //println(inBuffer);
-        windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
-        windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
-        println(windSpeed);
-        println(windDir);
-        windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
-      }
-      //port.clear();
-    }
+void serialEvent(Serial p) { 
+  p.readBytes(inBuffer);
+  if (inBuffer != null) {
+    //println(inBuffer);
+    windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
+    windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
+    println(windSpeed);
+    println(windDir);
+    windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
   }
-}
+} 
+
+
+//void readAnemometer() {
+//  if (readAnemometerSerial == true) {
+//    while (port.available() > 0) {
+//      port.readBytes(inBuffer);
+//      if (inBuffer != null) {
+//        //println(inBuffer);
+//        windSpeed = (inBuffer[1] & 255) << 8 | (inBuffer[0] & 255);
+//        windDir = (inBuffer[3] & 255) << 8 | (inBuffer[2] & 255);
+//        println(windSpeed);
+//        println(windDir);
+//        windSpeedCal = map(windSpeed, 225, 20000, 1, 50);
+//      }
+//    }
+//    //port.clear();
+//  }
+//}
 
 
 void updateFogPixels(boolean poof) {

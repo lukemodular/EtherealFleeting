@@ -1,29 +1,29 @@
 public class PoofEvents {
 
-  public String decodedLetter = ".";
+  public String decodedLetter = "a";
   public String letter;
 
-  //public int poofEventDurationMin = 8000;  
-  //public int poofEventDurationMax = 10000;
-  public int poofMorseEventDuration = 5000;
+  //public int poofEventDurationMin = 2000;  
+  //public int poofEventDurationMax = 4000;
+  public int poofMorseEventDuration = 600;
 
   public boolean poof = false;
   public boolean fan = false;
   public boolean flood = false;
 
   //random between fog events
-  public int poofBetweenEventMin = 120000;
-  public int poofBetweenEventMax = 180000;
+  public int poofBetweenEventMin = 30000;
+  public int poofBetweenEventMax = 70000;
 
   //public int poofDurationMin = 2100;
   //public int poofDurationMax = 2700;
 
-  public int poofDurationShort = 600;
-  public int poofDurationLong = 1100;
+  public int poofDurationShort = 1000;
+  public int poofDurationLong = 2300;
   public int poofMorseDuration;
 
-  public int fanDurationMin = 12000;
-  public int fanDurationMax = 16000;
+  public int fanDurationMin = 8000;
+  public int fanDurationMax = 7000;
 
   //public int poofCountMin = 1;
   //public int poofCountMax = 4;
@@ -93,7 +93,7 @@ public class PoofEvents {
     if (poofs < poofCount) {
 
       // start the next poof?
-      if (getPoofEllapseTime() > poofEventDuration) {
+      if (getPoofEllapseTime() > poofDuration + poofEventDuration) {
         resetPoofEvent();
       }
     }

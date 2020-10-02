@@ -1,65 +1,32 @@
-/**
- * Simple Read
- * 
- * Read data from the serial port and change the color of a rectangle
- * when a switch connected to a Wiring or Arduino board is pressed and released.
- * This example works with the Wiring / Arduino program that follows below.
- */
+  
 
-
-import processing.serial.*;
-
-Serial myPort;  // Create object from Serial class
-int val;      // Data received from the serial port
-
-void setup() 
-{
-  size(200, 200);
-  // I know that the first port in the serial list on my mac
-  // is always my  FTDI adaptor, so I open Serial.list()[0].
-  // On Windows machines, this generally opens COM1.
-  // Open whatever port is the one you're using.
-  String portName = Serial.list()[0];
-  myPort = new Serial(this, portName, 115200);
-}
-
-void draw()
-{
-  if ( myPort.available() > 0) {  // If data is available,
-    val = myPort.read();         // read it and store it in val
-    myPort.clear();
-  }
-  background(255);             // Set background to white
-  if (val == 0) {              // If the serial value is 0,
-    fill(0);                   // set fill to black
-  } 
-  else {                       // If the serial value is not 0,
-    fill(204);                 // set fill to light gray
-  }
-  rect(50, 50, 100, 100);
-}
-
-
-
-/*
-
-// Wiring / Arduino Code
-// Code for sensing a switch status and writing the value to the serial port.
-
-int switchPin = 4;                       // Switch connected to pin 4
-
-void setup() {
-  pinMode(switchPin, INPUT);             // Set pin 0 as an input
-  Serial.begin(9600);                    // Start serial communication at 9600 bps
-}
-
-void loop() {
-  if (digitalRead(switchPin) == HIGH) {  // If switch is ON,
-    Serial.write(1);               // send 1 to Processing
-  } else {                               // If the switch is not ON,
-    Serial.write(0);               // send 0 to Processing
-  }
-  delay(100);                            // Wait 100 milliseconds
-}
-
-*/
+// Example by Tom Igoe 
+ 
+import processing.serial.*; 
+ 
+Serial myPort;    // The serial port
+PFont myFont;     // The display font
+byte[] inBuffer = new byte[5];
+int lf = 42;      // ASCII linefeed 
+ 
+void setup() { 
+  size(400,200); 
+  // You'll need to make this font with the Create Font Tool 
+  // List all the available serial ports: 
+  printArray(Serial.list()); 
+  // I know that the first port in the serial list on my mac 
+  // is always my  Keyspan adaptor, so I open Serial.list()[0]. 
+  // Open whatever port is the one you're using. 
+  myPort = new Serial(this, Serial.list()[0], 115200); 
+  myPort.bufferUntil(lf); 
+} 
+ 
+void draw() { 
+  background(0); 
+  //text("received: " + inBuffer, 10,50); 
+  println(inBuffer);
+} 
+ 
+void serialEvent(Serial p) { 
+  inBuffer = p.readBytes(); 
+} 
